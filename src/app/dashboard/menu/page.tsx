@@ -24,8 +24,6 @@ const MenuPage = () => {
   const { products, setProducts, loadingProducts, setLoadingProducts } =
     useProductStore();
 
-  console.log(categories, products);
-
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [cart, setCart] = useState<
     { id: number; name: string; price: number; quantity: number }[]
@@ -174,13 +172,13 @@ const MenuPage = () => {
               </ScrollArea>
             </CardHeader>
 
-              <CardContent className="p-6">
-                <ScrollArea className="h-[calc(100vh-280px)]">
-            {loadingProducts ? (
-              <div className="flex justify-center items-center py-5">
-                <Loader className="h-6 w-6 text-primary animate-spin" />
-              </div>
-            ) : (
+            <CardContent className="p-6">
+              <ScrollArea className="h-[calc(100vh-280px)]">
+                {loadingProducts ? (
+                  <div className="flex justify-center items-center py-5">
+                    <Loader className="h-6 w-6 text-primary animate-spin" />
+                  </div>
+                ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {filteredProductsByCategoryAndSearch.map((product) => (
                       <Card
@@ -244,9 +242,9 @@ const MenuPage = () => {
                       </Card>
                     ))}
                   </div>
-              )}
-                </ScrollArea>
-              </CardContent>
+                )}
+              </ScrollArea>
+            </CardContent>
           </Card>
         </div>
         <Card className="w-full max-w-xs mx-auto">
@@ -258,22 +256,33 @@ const MenuPage = () => {
                 type="number"
                 onChange={(e) => {
                   const value = parseFloat(e.target.value);
-                  if (value >= 0) {
+                  if (!isNaN(value) && value >= 0) {
                     setCashAmount(value);
+                  }
+                  if (e.target.value.length === 0) {
+                    setCashAmount(0);
                   }
                 }}
               />
             </div>
+
             <div>
               <span className="text-xs">Discount</span>
               <Input
                 placeholder="discount"
                 type="number"
                 onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (value >= 0) {
-                    setDiscount(value);
+                  let value = parseFloat(e.target.value);
+
+                  if (value > 100) {
+                    value = 100;
                   }
+
+                  if (e.target.value === "" || isNaN(value)) {
+                    value = 0;
+                  }
+
+                  setDiscount(value);
                 }}
               />
             </div>
