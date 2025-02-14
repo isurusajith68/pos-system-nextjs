@@ -25,6 +25,7 @@ import Link from "next/link";
 import { loginUser } from "@/services/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { Loader } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -118,7 +119,14 @@ const LoginPage = () => {
               />
 
               <Button type="submit" className="w-full">
-                Sign In
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Loader size={20} className="mr-2" />
+                    Logging in..
+                  </>
+                ) : (
+                  "Login"
+                )}
               </Button>
             </form>
           </Form>

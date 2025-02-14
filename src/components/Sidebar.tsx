@@ -18,8 +18,7 @@ import { logoutUser } from "@/services/auth";
 import { usePathname } from "next/navigation";
 
 const Sidebar = () => {
-  
-  const path =usePathname();
+  const path = usePathname();
 
   console.log(path, "path");
 
