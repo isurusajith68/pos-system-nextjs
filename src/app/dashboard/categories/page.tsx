@@ -1,0 +1,388 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Edit, Loader, Trash2, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  addCategory,
+  deleteCategory,
+  getCategories,
+  updateCategory,
+} from "@/services/category";
+import {
+  RiLoader2Fill,
+  RiResetLeftFill,
+  RiResetRightLine,
+} from "react-icons/ri";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { useCategoryStore } from "@/store/useCategoryStore";
+
+const formSchema = z.object({
+  categoryName: z.string().min(2, {
+    message: "Category name must be at least 2 characters.",
+  }),
+  categoryImage: z.string().optional(), // Changed to string (Base64)
+});
+
+export default function CategoryManagement() {
+  const [categoryImage, setCategoryImage] = useState<string | undefined>(
+    undefined
+  );
+  const { categories, setCategories, loading, setLoading } = useCategoryStore();
+
+  const [editingCategory, setEditingCategory] = useState<{
+    id: string;
+    name: string;
+    image?: string;
+  } | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const [spinning, setSpinning] = useState(false);
+  const { toast } = useToast();
+  const handleReset = () => {
+    setSpinning(true);
+
+    form.reset();
+    setEditingCategory(null);
+    setCategoryImage(null);
+    setTimeout(() => {
+      setSpinning(false);
+    }, 1000);
+  };
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      categoryName: "",
+    },
+  });
+
+  useEffect(() => {
+    if (categories.length === 0 && !loading) {
+      loadCategories();
+    }
+  }, []);
+
+  const loadCategories = async () => {
+    setLoading(true);
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (editingCategory) {
+      await updateCategory(
+        editingCategory.id,
+        values.categoryName,
+        categoryImage
+      );
+      setEditingCategory(null);
+      toast({
+        title: "Category updated successfully",
+        description: "Category has been updated successfully.",
+        className: "bg-green-500 text-white",
+      });
+    } else {
+      const result = await addCategory(values.categoryName, categoryImage);
+
+      if (!result.status) {
+        return toast({
+          title: "Error adding category",
+          description: result.message,
+          className: "bg-red-500 text-white",
+        });
+      }
+
+      toast({
+        title: "Category added successfully",
+        description: "Category has been added successfully.",
+        className: "bg-green-500 text-white",
+      });
+    }
+
+    form.reset();
+    setCategoryImage(null);
+    loadCategories();
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteCategory(id);
+    loadCategories();
+
+    toast({
+      title: "Category deleted successfully",
+      description: "Category has been deleted successfully.",
+      className: "bg-green-500 text-white",
+    });
+  };
+
+  const handleEdit = (id: string, name: string, image?: string) => {
+    setEditingCategory({ id, name, image });
+    form.setValue("categoryName", name);
+    setCategoryImage(image || undefined);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCategoryImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const filteredCategories = categories.filter((category) => {
+    return (
+      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      category._id.includes(searchTerm)
+    );
+  });
+
+  return (
+    <div className="container mx-auto py-5">
+      <h1 className="text-xl font-bold text-primary mb-6">Category</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex justify-between items-center ">
+              {editingCategory ? "Edit Category" : "Add Category"}
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="bg-primary p-1 rounded-full text-secondary">
+                      <RiResetRightLine
+                        onClick={handleReset}
+                        className={`h-6 w-6 cursor-pointer ${
+                          spinning ? "animate-spin" : ""
+                        }`}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" align="center" sideOffset={16}>
+                    <p>Reset</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="categoryName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter category name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="categoryImage"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Category Image</FormLabel>
+                      <FormControl>
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            id="categoryImage"
+                            type="file"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() =>
+                              document.getElementById("categoryImage")?.click()
+                            }
+                          >
+                            <Upload className="mr-2 h-4 w-4" /> Upload Image
+                          </Button>
+                          {categoryImage && (
+                            <div className="text-sm text-muted-foreground">
+                              <Image
+                                src={categoryImage}
+                                alt="Category Image"
+                                width={50}
+                                height={50}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full">
+                  {editingCategory ? "Update Category" : "Add Category"}
+                  {form.formState.isSubmitting && (
+                    <RiLoader2Fill className="animate-spin ml-2 h-4 w-4" />
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <div className="flex justify-between items-center w-full">
+              <CardTitle>Categories</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground mr-2 text-xs">
+                  Filter:
+                </span>
+                <Input
+                  type="search"
+                  placeholder="Search categories"
+                  className=""
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex justify-center items-center py-5">
+                <Loader className="h-6 w-6 text-primary animate-spin" />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-semibold">
+                      Category Name
+                    </TableHead>
+                    <TableHead className="font-semibold">Image</TableHead>
+                    <TableHead className=""></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCategories.map((category) => (
+                    <TableRow key={category._id}>
+                      <TableCell className="capitalize">
+                        {category.name}
+                      </TableCell>
+                      <TableCell className="">
+                        {category.image && (
+                          <Image
+                            src={category.image || "/placeholder.png"}
+                            alt={category.name}
+                            width={40}
+                            height={40}
+                            className="rounded-md object-cover"
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="mr-2"
+                          onClick={() =>
+                            handleEdit(
+                              category._id,
+                              category.name,
+                              category.image
+                            )
+                          }
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will
+                                permanently delete this category.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction asChild>
+                                <Button
+                                  variant="ghost"
+                                  onClick={() => handleDelete(category._id)}
+                                >
+                                  Continue
+                                </Button>
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

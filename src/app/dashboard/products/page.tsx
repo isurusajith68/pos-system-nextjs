@@ -1,0 +1,575 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  addProduct,
+  deleteProduct,
+  getProducts,
+  updateProduct,
+} from "@/services/product";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { RiLoader2Fill, RiResetRightLine } from "react-icons/ri";
+import { Edit, Loader, Trash2, Upload } from "lucide-react";
+import Image from "next/image";
+import { getCategories } from "@/services/category";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useCategoryStore, useProductStore } from "@/store/useCategoryStore";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+const formSchema = z.object({
+  productName: z
+    .string()
+    .min(2, { message: "Product name must be at least 2 characters." }),
+  price: z.string().regex(/^\d+(\.\d{1,2})?$/, {
+    message: "Price must be a valid number with up to 2 decimal places.",
+  }),
+  category: z.string().min(1, { message: "Please select a category." }),
+  stock: z
+    .string()
+    .regex(/^\d+$/, { message: "Stock must be a valid number." }),
+  productImage: z.instanceof(File).optional(),
+});
+
+export default function ProductManagement() {
+  const {
+    products,
+    setProducts,
+    loadingProducts,
+    setLoadingProducts,
+    setProductImage,
+    setEditingProduct,
+    editingProduct,
+    productImage,
+  } = useProductStore();
+
+  const { toast } = useToast();
+
+  const {
+    categories,
+    setCategories,
+    loading: loadingCategories,
+    setLoading: setLoadingCategories,
+  } = useCategoryStore();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      productName: "",
+      price: "",
+      category: "",
+      stock: "",
+    },
+  });
+  const [spinning, setSpinning] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+
+  const filteredProducts = products.filter((product) => {
+    return (
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (selectedCategory === "" || product.category === selectedCategory)
+    );
+  });
+
+  const handleReset = () => {
+    setSpinning(true);
+
+    form.reset();
+    setProductImage(null);
+    setEditingProduct(null);
+    setTimeout(() => {
+      setSpinning(false);
+    }, 1000);
+  };
+
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const productData = await getProducts();
+      setProducts(productData);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setLoadingProducts(false);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    setLoadingCategories(true);
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const { productName, price, category, stock } = values;
+
+    const newProduct = {
+      name: productName,
+      price,
+      category,
+      stock,
+      image: productImage ? productImage : undefined,
+    };
+
+    try {
+      if (editingProduct) {
+        const updateResult = await updateProduct(
+          editingProduct._id,
+          newProduct.name,
+          newProduct.price,
+          newProduct.category,
+          newProduct.stock,
+          newProduct.image
+        );
+
+        if (!updateResult.status) {
+          return toast({
+            title: "Error updating product",
+            description: updateResult.message,
+            className: "bg-red-500 text-white",
+          });
+        }
+
+        if (updateResult.status) {
+          toast({
+            title: "Product updated successfully",
+            description: "Product has been updated successfully.",
+            className: "bg-green-500 text-white",
+          });
+          fetchProducts();
+        }
+      } else {
+        const result = await addProduct(
+          newProduct.name,
+          newProduct.price,
+          newProduct.category,
+          newProduct.stock,
+          newProduct.image
+        );
+
+        if (!result.status) {
+          return toast({
+            title: "Error adding product",
+            description: result.message,
+            className: "bg-red-500 text-white",
+          });
+        }
+
+        if (result.status) {
+          toast({
+            title: "Product added successfully",
+            description: "Product has been added successfully.",
+            className: "bg-green-500 text-white",
+          });
+          fetchProducts();
+        }
+      }
+      fetchProducts();
+    } catch (error) {
+      console.error("Error processing product:", error);
+    }
+
+    form.reset();
+    setProductImage(null);
+    setEditingProduct(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteProduct(id);
+      fetchProducts();
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (products.length === 0 && !loadingProducts) {
+      fetchProducts();
+    }
+
+    if (categories.length === 0 && !loadingCategories) {
+      loadCategories();
+    }
+  }, []);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const base64Image = reader.result as string;
+
+        setProductImage(base64Image);
+      };
+
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEdit = (product: any) => {
+    setEditingProduct(product);
+    form.setValue("productName", product.name);
+    form.setValue("price", product.price);
+    form.setValue("category", product.category);
+    form.setValue("stock", product.stock);
+    setProductImage(product.image);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <div className="container mx-auto py-5">
+      <h1 className="text-xl font-bold text-primary mb-6">Products</h1>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex justify-between items-center ">
+              {" "}
+              {editingProduct ? "Edit Product" : "Add Product"}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="bg-primary p-1 rounded-full text-secondary">
+                      <RiResetRightLine
+                        onClick={handleReset}
+                        className={`h-6 w-6 cursor-pointer ${
+                          spinning ? "animate-spin" : ""
+                        }`}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" align="center" sideOffset={16}>
+                    <p>Reset</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingCategories ? (
+              <div className="flex justify-center items-center py-5">
+                <Loader className="h-6 w-6 text-primary animate-spin" />
+              </div>
+            ) : (
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={form.control}
+                    name="productName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter product name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter product price"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((category) => (
+                                <SelectItem
+                                  key={category._id}
+                                  value={category.name}
+                                >
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="stock"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Stock</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter stock quantity"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="productImage"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Product Image</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              id="productImage"
+                              type="file"
+                              onChange={handleImageUpload}
+                              className="hidden"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() =>
+                                document.getElementById("productImage")?.click()
+                              }
+                            >
+                              <Upload className="mr-2 h-4 w-4" /> Upload Image
+                            </Button>
+                            {productImage && (
+                              <div className="text-sm text-muted-foreground">
+                                <Image
+                                  src={productImage}
+                                  alt="Product Image"
+                                  width={50}
+                                  height={50}
+                                  className="rounded-md"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit" className="w-full">
+                    {editingProduct ? "Update Product" : "Add Product"}
+                    {form.formState.isSubmitting && (
+                      <RiLoader2Fill className="animate-spin ml-2 h-4 w-4" />
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <div className="flex justify-between items-center w-full">
+              <CardTitle>Product List</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground mr-2 text-xs">
+                  Filter:
+                </span>
+                <Input
+                  type="search"
+                  placeholder="Search products"
+                  className=""
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+
+                <Select
+                  onValueChange={(value) => {
+                    if (value === "all") {
+                      setSelectedCategory("");
+                    } else {
+                      setSelectedCategory(value);
+                    }
+                  }}
+                  value={selectedCategory}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category._id} value={category.name}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loadingProducts ? (
+              <div className="flex justify-center items-center py-5">
+                <Loader className="h-6 w-6 text-primary animate-spin" />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-32">Product Name</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead>Image</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProducts.map((product) => (
+                    <TableRow key={product._id}>
+                      <TableCell className="capitalize text-clip ">
+                        {product.name}
+                      </TableCell>
+                      <TableCell>
+                        Rs {parseFloat(product.price).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="capitalize">
+                        {product.category}
+                      </TableCell>
+                      <TableCell>{product.stock}</TableCell>
+                      <TableCell>
+                        {product.image && (
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            width={50}
+                            height={50}
+                            className="rounded-md"
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          onClick={() => handleEdit(product)}
+                          variant="ghost"
+                          size="icon"
+                          className="mr-2"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will
+                                permanently delete this category.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction asChild>
+                                <Button
+                                  variant="ghost"
+                                  onClick={() => handleDelete(product._id)}
+                                >
+                                  Continue
+                                </Button>
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
