@@ -36,11 +36,17 @@ const MenuPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const currentDate = new Date();
-    setDate(currentDate.toLocaleDateString());
-    setTime(currentDate.toLocaleTimeString());
-  }, []);
+    const updateDateTime = () => {
+      const currentDate = new Date();
+      setDate(currentDate.toLocaleDateString());
+      setTime(currentDate.toLocaleTimeString());
+    };
 
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
   const loadCategories = async () => {
     setLoading(true);
     try {
