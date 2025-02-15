@@ -19,7 +19,6 @@ export const addCategory = async (
 ) => {
   const db = await connectToDatabase();
 
-  // Check if category already exists
   const category = await db
     .collection("categories")
     .findOne({ name: categoryName });

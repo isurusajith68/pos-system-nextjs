@@ -64,7 +64,7 @@ const LoginPage = () => {
       toast({
         title: "Success",
         description: "Logged in successfully",
-        className: "bg-success text-white",
+        className: "bg-green-500 text-white",
       });
       router.push("/dashboard");
     } catch (error) {

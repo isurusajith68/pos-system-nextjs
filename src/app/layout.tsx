@@ -28,7 +28,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Toaster />
+        <Toaster key={Math.random()} />
         {children}
       </body>
     </html>

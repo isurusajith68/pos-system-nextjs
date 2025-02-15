@@ -110,11 +110,23 @@ export default function CategoryManagement() {
   };
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (editingCategory) {
-      await updateCategory(
-        editingCategory.id,
-        values.categoryName,
-        categoryImage
-      );
+      if (!categoryImage) {
+        return toast({
+          title: "Error updating category",
+          description: "Category image is required.",
+          className: "bg-red-500 text-white",
+        });
+      }
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: categoryImage }),
+      });
+
+      const { url } = await res.json();
+
+      await updateCategory(editingCategory.id, values.categoryName, url);
       setEditingCategory(null);
       toast({
         title: "Category updated successfully",
@@ -122,7 +134,23 @@ export default function CategoryManagement() {
         className: "bg-green-500 text-white",
       });
     } else {
-      const result = await addCategory(values.categoryName, categoryImage);
+      if (!categoryImage) {
+        return toast({
+          title: "Error adding category",
+          description: "Category image is required.",
+          className: "bg-red-500 text-white",
+        });
+      }
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: categoryImage }),
+      });
+
+      const { url } = await res.json();
+
+      const result = await addCategory(values.categoryName, url);
 
       if (!result.status) {
         return toast({

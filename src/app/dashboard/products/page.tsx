@@ -164,13 +164,30 @@ export default function ProductManagement() {
 
     try {
       if (editingProduct) {
+        if (!productImage) {
+          toast({
+            title: "Error adding product",
+            description: "Please upload an image for the product",
+            className: "bg-red-500 text-white",
+          });
+          return;
+        }
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: productImage }),
+        });
+
+        const { url } = await res.json();
+
         const updateResult = await updateProduct(
           editingProduct._id,
           newProduct.name,
           newProduct.price,
           newProduct.category,
           newProduct.stock,
-          newProduct.image
+          url
         );
 
         if (!updateResult.status) {
@@ -190,12 +207,29 @@ export default function ProductManagement() {
           fetchProducts();
         }
       } else {
+        if (!productImage) {
+          toast({
+            title: "Error adding product",
+            description: "Please upload an image for the product",
+            className: "bg-red-500 text-white",
+          });
+          return;
+        }
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: productImage }),
+        });
+
+        const { url } = await res.json();
+
         const result = await addProduct(
           newProduct.name,
           newProduct.price,
           newProduct.category,
           newProduct.stock,
-          newProduct.image
+          url
         );
 
         if (!result.status) {
@@ -259,7 +293,14 @@ export default function ProductManagement() {
     }
   };
 
-  const handleEdit = (product: { _id: string; name: string; price: number; category: string; stock: number; image?: string }) => {
+  const handleEdit = (product: {
+    _id: string;
+    name: string;
+    price: number;
+    category: string;
+    stock: number;
+    image?: string;
+  }) => {
     setEditingProduct({
       ...product,
       price: parseFloat(product.price.toString()),
