@@ -71,7 +71,8 @@ const formSchema = z.object({
   stock: z
     .string()
     .regex(/^\d+$/, { message: "Stock must be a valid number." }),
-  productImage: z.instanceof(File).optional(),
+  productImage:
+    typeof window !== "undefined" ? z.instanceof(File).optional() : z.any(),
 });
 
 export default function ProductManagement() {
