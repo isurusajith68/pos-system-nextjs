@@ -11,7 +11,7 @@ interface LayoutProps {
 
 const layout = async ({ children }: LayoutProps) => {
   return (
-    <div className="flex sm::h-screen flex-col h-dvh">
+    <div className="flex sm::h-screen flex-col h-svh">
       <NavBar  />
       <div className="flex flex-1">
         <Sidebar />
