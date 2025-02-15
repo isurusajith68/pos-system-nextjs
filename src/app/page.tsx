@@ -120,7 +120,7 @@ const LoginPage = () => {
               <Button type="submit" className="w-full">
                 {form.formState.isSubmitting ? (
                   <>
-                    <Loader size={20} className="mr-2" />
+                    <Loader size={20} className="mr-2 animate-spin" />
                     Logging in..
                   </>
                 ) : (
