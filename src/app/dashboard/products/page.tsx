@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -110,15 +110,17 @@ export default function ProductManagement() {
   const [selectedCategory, setSelectedCategory] = useState("");
 
   const filteredProducts = products.filter((product) => {
-    return (
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedCategory === "" || product.category === selectedCategory)
-    );
+    const matchesSearch = product.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory
+      ? product.category === selectedCategory
+      : true;
+    return matchesSearch && matchesCategory;
   });
 
   const handleReset = () => {
     setSpinning(true);
-
     form.reset();
     setProductImage(null);
     setEditingProduct(null);
@@ -134,7 +136,6 @@ export default function ProductManagement() {
       setProducts(productData);
     } catch (error) {
       console.error("Error fetching products:", error);
-      setLoadingProducts(false);
     } finally {
       setLoadingProducts(false);
     }
@@ -151,6 +152,7 @@ export default function ProductManagement() {
       setLoadingCategories(false);
     }
   };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const { productName, price, category, stock } = values;
 
@@ -249,7 +251,6 @@ export default function ProductManagement() {
           fetchProducts();
         }
       }
-      fetchProducts();
     } catch (error) {
       console.error("Error processing product:", error);
     }
@@ -282,13 +283,10 @@ export default function ProductManagement() {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-
       reader.onloadend = () => {
         const base64Image = reader.result as string;
-
         setProductImage(base64Image);
       };
-
       reader.readAsDataURL(file);
     }
   };
@@ -311,18 +309,88 @@ export default function ProductManagement() {
     form.setValue("category", product.category);
     form.setValue("stock", product.stock.toString());
     setProductImage(product.image);
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const ProductCard = ({ product }) => (
+    <Card key={product._id} className="w-full ">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex-1">
+            <CardTitle className="text-lg capitalize">{product.name}</CardTitle>
+            <p className="text-sm text-muted-foreground capitalize mt-1">
+              {product.category}
+            </p>
+          </div>
+          {product.image && (
+            <div className="flex-shrink-0">
+              <Image
+                src={product.image}
+                alt={product.name}
+                width={60}
+                height={60}
+                className="rounded-md object-cover"
+              />
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
+          <div className="text-muted-foreground">Price:</div>
+          <div className="font-medium">
+            Rs {parseFloat(product.price.toString()).toFixed(2)}
+          </div>
+          <div className="text-muted-foreground">Stock:</div>
+          <div>{product.stock}</div>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => handleEdit(product)}
+            variant="ghost"
+            size="sm"
+            className="h-8"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" className="h-8">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete
+                  this product.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleDelete(product._id)}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
-    <div className="container mx-auto py-5">
+    <div className="container mx-auto py-5 px-4 ">
       <h1 className="text-xl font-bold text-primary mb-6">Products</h1>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="md:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex justify-between items-center ">
-              {" "}
+            <CardTitle className="flex justify-between items-center">
               {editingProduct ? "Edit Product" : "Add Product"}
               <TooltipProvider>
                 <Tooltip>
@@ -487,36 +555,28 @@ export default function ProductManagement() {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
+        <Card>
           <CardHeader>
-            <div className="flex justify-between items-center w-full max-sm:flex-col max-sm:gap-2">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle>Product List</CardTitle>
-              <div className="flex items-center gap-2 max-sm:flex-col">
-                <span className="text-muted-foreground mr-2 text-xs max-sm:hidden">
-                  Filter:
-                </span>
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                 <Input
                   type="search"
                   placeholder="Search products"
-                  className=""
+                  className="sm:w-[200px]"
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-
                 <Select
                   onValueChange={(value) => {
-                    if (value === "all") {
-                      setSelectedCategory("");
-                    } else {
-                      setSelectedCategory(value);
-                    }
+                    setSelectedCategory(value === "all" ? "" : value);
                   }}
-                  value={selectedCategory}
+                  value={selectedCategory || "all"}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="sm:w-[180px]">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category._id} value={category.name}>
                         {category.name}
@@ -529,89 +589,101 @@ export default function ProductManagement() {
           </CardHeader>
           <CardContent>
             {loadingProducts ? (
-              <div className="flex justify-center items-center py-5">
+              <div className="flex justify-center items-center py-8">
                 <Loader className="h-6 w-6 text-primary animate-spin" />
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-32">Product Name</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Image</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                <div className="grid gap-4 lg:hidden">
                   {filteredProducts.map((product) => (
-                    <TableRow key={product._id}>
-                      <TableCell className="capitalize text-clip ">
-                        {product.name}
-                      </TableCell>
-                      <TableCell>
-                        Rs {parseFloat(product.price.toString()).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="capitalize">
-                        {product.category}
-                      </TableCell>
-                      <TableCell>{product.stock}</TableCell>
-                      <TableCell>
-                        {product.image && (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            width={50}
-                            height={50}
-                            className="rounded-md"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          onClick={() => handleEdit(product)}
-                          variant="ghost"
-                          size="icon"
-                          className="mr-2"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="icon">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Are you absolutely sure?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will
-                                permanently delete this category.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction asChild>
-                                <Button
-                                  variant="ghost"
-                                  onClick={() => handleDelete(product._id)}
-                                >
-                                  Continue
-                                </Button>
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                    </TableRow>
+                    <ProductCard key={product._id} product={product} />
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+
+                <div className="hidden lg:block">
+                  <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Product Name</TableHead>
+                          <TableHead>Price</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Stock</TableHead>
+                          <TableHead>Image</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredProducts.map((product) => (
+                          <TableRow key={product._id}>
+                            <TableCell className="capitalize font-medium">
+                              {product.name}
+                            </TableCell>
+                            <TableCell>
+                              Rs{" "}
+                              {parseFloat(product.price.toString()).toFixed(2)}
+                            </TableCell>
+                            <TableCell className="capitalize">
+                              {product.category}
+                            </TableCell>
+                            <TableCell>{product.stock}</TableCell>
+                            <TableCell>
+                              {product.image && (
+                                <Image
+                                  src={product.image}
+                                  alt={product.name}
+                                  width={50}
+                                  height={50}
+                                  className="rounded-md object-cover"
+                                />
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                onClick={() => handleEdit(product)}
+                                variant="ghost"
+                                size="icon"
+                                className="mr-2"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="destructive" size="icon">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Are you absolutely sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will
+                                      permanently delete this product.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(product._id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

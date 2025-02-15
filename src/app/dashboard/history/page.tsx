@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import {
   Table,
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, Search } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const billHistory = [
   {
@@ -77,7 +77,6 @@ const billHistory = [
 
 const BillHistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBill, setSelectedBill] = useState(null);
 
   const filteredBills = billHistory.filter(
     (bill) =>
@@ -86,12 +85,31 @@ const BillHistoryPage = () => {
       bill.cashier.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return (
-    <div className="container mx-auto p-2">
-      <h1 className="text-xl font-bold mb-6">Bill History</h1>
+  const BillDetails = ({ bill }: { bill: (typeof billHistory)[0] }) => (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <p className="font-semibold">Date:</p>
+        <p>{bill.date}</p>
+        <p className="font-semibold">Time:</p>
+        <p>{bill.time}</p>
+        <p className="font-semibold">Cashier:</p>
+        <p>{bill.cashier}</p>
+        <p className="font-semibold">Total:</p>
+        <p>${bill.total.toFixed(2)}</p>
+        <p className="font-semibold">Cash:</p>
+        <p>${bill.cash.toFixed(2)}</p>
+        <p className="font-semibold">Change:</p>
+        <p>${bill.change.toFixed(2)}</p>
+      </div>
+    </div>
+  );
 
-      <div className="flex justify-between items-center mb-6">
-        <div className="relative w-64">
+  return (
+    <div className="container mx-auto p-4 max-w-7xl">
+      <h1 className="text-2xl font-bold mb-6 md:text-3xl">Bill History</h1>
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-64">
           <Input
             type="text"
             placeholder="Search bills..."
@@ -103,83 +121,120 @@ const BillHistoryPage = () => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bills</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Bill Number</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Cashier</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Cash</TableHead>
-                <TableHead>Change</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBills.map((bill) => (
-                <TableRow key={bill.id}>
-                  <TableCell>{bill.billNumber}</TableCell>
-                  <TableCell>{bill.date}</TableCell>
-                  <TableCell>{bill.time}</TableCell>
-                  <TableCell>{bill.cashier}</TableCell>
-                  <TableCell>${bill.total.toFixed(2)}</TableCell>
-                  <TableCell>${bill.cash.toFixed(2)}</TableCell>
-                  <TableCell>${bill.change.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setSelectedBill(bill)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>
-                            Bill Details - {bill.billNumber}
-                          </DialogTitle>
-                          <DialogDescription>
-                            Detailed information about the selected bill.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="mt-4">
-                          <p>
-                            <strong>Date:</strong> {bill.date}
-                          </p>
-                          <p>
-                            <strong>Time:</strong> {bill.time}
-                          </p>
-                          <p>
-                            <strong>Cashier:</strong> {bill.cashier}
-                          </p>
-                          <p>
-                            <strong>Total:</strong> ${bill.total.toFixed(2)}
-                          </p>
-                          <p>
-                            <strong>Cash:</strong> ${bill.cash.toFixed(2)}
-                          </p>
-                          <p>
-                            <strong>Change:</strong> ${bill.change.toFixed(2)}
-                          </p>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
+      {/* Mobile View */}
+      <div className="block md:hidden space-y-4">
+        {filteredBills.map((bill) => (
+          <Card key={bill.id} className="w-full">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg">{bill.billNumber}</CardTitle>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hover:bg-secondary"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl">
+                        Bill Details - {bill.billNumber}
+                      </DialogTitle>
+                      <DialogDescription>
+                        Detailed information about the selected bill.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4">
+                      <BillDetails bill={bill} />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-y-2 text-sm">
+                <div className="text-muted-foreground">Date & Time:</div>
+                <div>
+                  {bill.date} {bill.time}
+                </div>
+                <div className="text-muted-foreground">Cashier:</div>
+                <div>{bill.cashier}</div>
+                <div className="text-muted-foreground">Total:</div>
+                <div className="font-medium">${bill.total.toFixed(2)}</div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop View */}
+      <div className="hidden md:block">
+        <Card>
+          <CardHeader>
+            <CardTitle>Bills</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 sm:p-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Bill Number</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Cashier</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Cash</TableHead>
+                  <TableHead>Change</TableHead>
+                  <TableHead className="w-[80px]">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {filteredBills.map((bill) => (
+                  <TableRow key={bill.id}>
+                    <TableCell className="font-medium">
+                      {bill.billNumber}
+                    </TableCell>
+                    <TableCell>{bill.date}</TableCell>
+                    <TableCell>{bill.time}</TableCell>
+                    <TableCell>{bill.cashier}</TableCell>
+                    <TableCell>${bill.total.toFixed(2)}</TableCell>
+                    <TableCell>${bill.cash.toFixed(2)}</TableCell>
+                    <TableCell>${bill.change.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-secondary"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl">
+                              Bill Details - {bill.billNumber}
+                            </DialogTitle>
+                            <DialogDescription>
+                              Detailed information about the selected bill.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="mt-4">
+                            <BillDetails bill={bill} />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
