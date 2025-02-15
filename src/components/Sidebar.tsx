@@ -24,44 +24,44 @@ const Sidebar = () => {
   const menuItems = [
     {
       id: "Dashboard",
-      icon: <BiSolidDashboard size={24} />,
+      icon: <BiSolidDashboard className="sm:w-10 w-6" />,
       label: "Dashboard",
       link: "/dashboard",
     },
     {
       id: "Menu",
-      icon: <MdOutlineFastfood size={24} />,
+      icon: <MdOutlineFastfood className="sm:w-10 w-6" />,
       label: "Menu",
       link: "/dashboard/menu",
     },
     {
       id: "Products",
-      icon: <BiCartAdd size={24} />,
+      icon: <BiCartAdd className="sm:w-10 w-6" />,
       label: "Products",
       link: "/dashboard/products",
     },
     {
       id: "Category",
-      icon: <MdOutlineLibraryAdd size={24} />,
+      icon: <MdOutlineLibraryAdd className="sm:w-10 w-6" />,
       label: "Category",
       link: "/dashboard/categories",
     },
     {
       id: "Purchases History",
-      icon: <RiBillLine size={24} />,
+      icon: <RiBillLine className="sm:w-10 w-6" />,
       label: "Purchases History",
       link: "/dashboard/history",
     },
     {
       id: "Settings",
-      icon: <IoSettingsSharp size={24} />,
+      icon: <IoSettingsSharp className="sm:w-10 w-6" />,
       label: "Settings",
       link: "/dashboard/settings",
     },
   ];
 
   return (
-    <aside className="w-20 h-full flex flex-col justify-between py-6 px-3 bg-background ">
+    <aside className="sm:w-20 h-full flex flex-col justify-between py-6 px-3 bg-background w-12">
       <nav className="flex flex-col space-y-4">
         {menuItems.map((item) => (
           <TooltipProvider key={item.id}>
@@ -69,7 +69,7 @@ const Sidebar = () => {
               <TooltipTrigger asChild>
                 <Link
                   href={item.link}
-                  className={`flex justify-center items-center h-12 w-full rounded-lg transition duration-200 ease-in-out
+                  className={`flex justify-center items-center sm:h-12 w-full rounded-lg transition duration-200 ease-in-out h-8
                     ${
                       path === item.link
                         ? "bg-primary text-primary-foreground"
@@ -98,7 +98,7 @@ const Sidebar = () => {
                 }}
                 className="flex justify-center items-center w-12 h-12 text-red-500 hover:bg-red-100 dark:hover:bg-red-900 transition duration-200 ease-in-out rounded-lg"
               >
-                <TbLogout2 size={24} />
+                <TbLogout2 className="sm:w-8 w-6" />
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" align="center" sideOffset={16}>
