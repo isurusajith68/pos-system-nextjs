@@ -28,7 +28,7 @@ export const addProduct = async (
     return { status: false, message: "Product name already exists" };
   }
 
-  const result = await db.collection("products").insertOne({
+  await db.collection("products").insertOne({
     name,
     price,
     category,

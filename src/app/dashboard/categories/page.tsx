@@ -31,11 +31,7 @@ import {
   getCategories,
   updateCategory,
 } from "@/services/category";
-import {
-  RiLoader2Fill,
-  RiResetLeftFill,
-  RiResetRightLine,
-} from "react-icons/ri";
+import { RiLoader2Fill, RiResetRightLine } from "react-icons/ri";
 import {
   Tooltip,
   TooltipContent,
@@ -60,7 +56,7 @@ const formSchema = z.object({
   categoryName: z.string().min(2, {
     message: "Category name must be at least 2 characters.",
   }),
-  categoryImage: z.string().optional(), // Changed to string (Base64)
+  categoryImage: z.string().optional(),
 });
 
 export default function CategoryManagement() {

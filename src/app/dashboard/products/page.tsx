@@ -258,12 +258,16 @@ export default function ProductManagement() {
     }
   };
 
-  const handleEdit = (product: any) => {
-    setEditingProduct(product);
+  const handleEdit = (product: { _id: string; name: string; price: number; category: string; stock: number; image?: string }) => {
+    setEditingProduct({
+      ...product,
+      price: parseFloat(product.price.toString()),
+      stock: parseInt(product.stock.toString(), 10),
+    });
     form.setValue("productName", product.name);
-    form.setValue("price", product.price);
+    form.setValue("price", product.price.toString());
     form.setValue("category", product.category);
-    form.setValue("stock", product.stock);
+    form.setValue("stock", product.stock.toString());
     setProductImage(product.image);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -505,7 +509,7 @@ export default function ProductManagement() {
                         {product.name}
                       </TableCell>
                       <TableCell>
-                        Rs {parseFloat(product.price).toFixed(2)}
+                        Rs {parseFloat(product.price.toString()).toFixed(2)}
                       </TableCell>
                       <TableCell className="capitalize">
                         {product.category}

@@ -66,7 +66,6 @@ const LoginPage = () => {
         description: "Logged in successfully",
         className: "bg-success text-white",
       });
-      console.log(result.data);
       router.push("/dashboard");
     } catch (error) {
       console.error(error);

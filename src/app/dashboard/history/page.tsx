@@ -22,7 +22,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, Search } from "lucide-react";
 
-// Mock data for bill history
 const billHistory = [
   {
     id: 1,

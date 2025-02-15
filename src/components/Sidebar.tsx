@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { BiSolidDashboard, BiCartAdd, BiCategory } from "react-icons/bi";
+import { BiSolidDashboard, BiCartAdd } from "react-icons/bi";
 import { TbLogout2 } from "react-icons/tb";
 import { RiBillLine } from "react-icons/ri";
 import { MdOutlineFastfood } from "react-icons/md";

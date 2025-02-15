@@ -20,12 +20,14 @@ export const addCategory = async (
   const db = await connectToDatabase();
 
   // Check if category already exists
-  const category = await db.collection("categories").findOne({ name: categoryName });
+  const category = await db
+    .collection("categories")
+    .findOne({ name: categoryName });
   if (category) {
     return { status: false, message: "Category already exists" };
   }
 
-  const result = await db.collection("categories").insertOne({
+  await db.collection("categories").insertOne({
     name: categoryName,
     image: categoryImage,
   });

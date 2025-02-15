@@ -26,7 +26,7 @@ const MenuPage = () => {
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [cart, setCart] = useState<
-    { id: number; name: string; price: number; quantity: number }[]
+    { id: string; name: string; price: number; quantity: number }[]
   >([]);
   const [date, setDate] = useState<string>("");
   const [time, setTime] = useState<string>("");
@@ -81,7 +81,7 @@ const MenuPage = () => {
       : true && product.name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  const addToCart = (product: { id: number; name: string; price: number }) => {
+  const addToCart = (product: { id: string; name: string; price: number }) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
       if (existingItem) {
@@ -95,7 +95,7 @@ const MenuPage = () => {
     });
   };
 
-  const removeFromCart = (productId: number) => {
+  const removeFromCart = (productId: string) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === productId);
       if (existingItem && existingItem.quantity > 1) {
@@ -211,12 +211,14 @@ const MenuPage = () => {
                           <div className="flex justify-between items-center mb-4">
                             <div className="text-lg font-bold text-destructive dark:text-red-500">
                               <p className="font-bold text-lg ">
-                                Rs {parseFloat(product.price).toFixed(2)}
+                                Rs{" "}
+                                {parseFloat(product.price.toString()).toFixed(
+                                  2
+                                )}
                               </p>
                             </div>
                             <Badge
                               variant="outline"
-                              size="sm"
                               className={`${
                                 product.stock > 10
                                   ? "text-green-600 border-green-600"
@@ -314,7 +316,8 @@ const MenuPage = () => {
                     <div>
                       <p className="font-medium">{item.name}</p>
                       <span className="text-sm text-muted-foreground">
-                        Rs {parseFloat(item.price).toFixed(2)} x {item.quantity}
+                        Rs {parseFloat(item.price.toString()).toFixed(2)} x{" "}
+                        {item.quantity}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">

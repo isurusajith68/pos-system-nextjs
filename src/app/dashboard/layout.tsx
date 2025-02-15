@@ -1,9 +1,6 @@
 import NavBar from "@/components/NavBar";
 import Sidebar from "@/components/Sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getUserFromCookie } from "@/services/auth";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import React from "react";
 
 import { ReactNode } from "react";
