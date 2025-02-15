@@ -18,6 +18,7 @@ import { getCategories } from "@/services/category";
 import Image from "next/image";
 import { getProducts } from "@/services/product";
 import { Input } from "@/components/ui/input";
+import { useReactToPrint } from "react-to-print";
 
 const MenuPage = () => {
   const { categories, setCategories, loading, setLoading } = useCategoryStore();
@@ -118,6 +119,9 @@ const MenuPage = () => {
   const discountAmount = (totalBill * discount) / 100;
 
   const changeAmount = cashAmount - totalBill + discountAmount;
+
+  const contentRef = useRef<HTMLDivElement>(null);
+  const reactToPrintFn = useReactToPrint({ contentRef });
 
   return (
     <div className="container mx-auto ">
@@ -289,7 +293,7 @@ const MenuPage = () => {
               />
             </div>
           </div>
-          <ScrollArea className="h-[calc(100vh-250px)] border">
+          <ScrollArea className="h-[calc(100vh-250px)] border" ref={contentRef}>
             <CardHeader className="text-center">
               <CardTitle>
                 <h2 className="text-2xl font-bold">Vimukthi's Restaurant</h2>
@@ -378,7 +382,7 @@ const MenuPage = () => {
             </CardFooter>
           </ScrollArea>
           <div className="p-2">
-            <Button className="w-full" onClick={() => ""}>
+            <Button className="w-full" onClick={() => reactToPrintFn()}>
               <Printer className="mr-2 h-4 w-4" /> Print Bill
             </Button>
           </div>
