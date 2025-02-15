@@ -305,7 +305,7 @@ export default function CategoryManagement() {
         </Card>
         <Card className="md:col-span-1">
           <CardHeader>
-            <div className="flex justify-between items-center w-full">
+            <div className="flex justify-between items-center w-full max-sm:flex-col max-sm:gap-2">
               <CardTitle>Categories</CardTitle>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground mr-2 text-xs">

@@ -37,7 +37,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="h-16 flex justify-between items-center px-6 bg-background pt-2 pl-5">
+    <header className="sm:h-16 h-14 flex justify-between items-center px-6 bg-background pt-2 pl-5 p-1">
       <div className="flex items-center gap-5">
         <div className="flex items-center">
           {/* <Image
@@ -47,7 +47,7 @@ export default function Navbar() {
             alt="logo"
             className="mr-2 rounded-full"
           /> */}
-          <span className="text-lg font-extrabold  font-[family-name:var(--font-geist-sans)] text-primary">
+          <span className="sm:text-lg  font-extrabold  font-[family-name:var(--font-geist-sans)] text-primary">
             POS SYSTEM
           </span>
         </div>
@@ -59,17 +59,23 @@ export default function Navbar() {
           className="p-2 rounded-full bg-white dark:bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground transition duration-200 ease-in-out"
           aria-label="Toggle dark mode"
         >
-          {darkMode ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
+          {darkMode ? (
+            <MdLightMode className="sm:w-4 w-4 h-4 sm:h-4" />
+          ) : (
+            <MdDarkMode className="sm:w-4 w-4 h-4 sm:h-4" />
+          )}
         </button>
 
         <div className="flex items-center cursor-pointer border-l border-border pl-4 gap-4">
           <div className="flex flex-col items-end  ml-2 ">
-            <span className="ml-2  font-semibold text-foreground">
+            <span className="ml-2  font-semibold text-foreground text-sm sm:text-base">
               {user?.name}
             </span>
-            <span className="ml-2 font-thin text-xs ">{user?.role}</span>
+            <span className="ml-2 font-thin sm:text-xs text-[0.6rem]">
+              {user?.role}
+            </span>
           </div>
-          <Avatar className="w-8 h-8">
+          <Avatar className="sm:w-8 sm:h-8 h-6 w-6">
             <AvatarImage
               src="https://github.com/shadcn.png"
               alt="User avatar"

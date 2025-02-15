@@ -489,10 +489,10 @@ export default function ProductManagement() {
 
         <Card className="md:col-span-2">
           <CardHeader>
-            <div className="flex justify-between items-center w-full">
+            <div className="flex justify-between items-center w-full max-sm:flex-col max-sm:gap-2">
               <CardTitle>Product List</CardTitle>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground mr-2 text-xs">
+              <div className="flex items-center gap-2 max-sm:flex-col">
+                <span className="text-muted-foreground mr-2 text-xs max-sm:hidden">
                   Filter:
                 </span>
                 <Input

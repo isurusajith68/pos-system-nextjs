@@ -125,17 +125,17 @@ const MenuPage = () => {
         <div className="lg:col-span-3 xl:col-span-3">
           <Card className=" backdrop-blur-sm shadow-xl ">
             <CardHeader className="border-b py-2 bg-background">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between max-sm:flex-col">
                 <CardTitle className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   Menu
                 </CardTitle>
                 <Input
                   type="text"
                   placeholder="Search for items"
-                  className="w-1/3 mt-2"
+                  className="w-1/3 mt-2 max-sm:w-full"
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <UtensilsCrossed className="h-8 w-8 text-primary opacity-80" />
+                <UtensilsCrossed className="h-8 w-8 text-primary opacity-80 max-sm:hidden" />
               </div>
               <ScrollArea className="w-full max-w-full overflow-y-hidden py-4">
                 <div className="flex gap-3 whitespace-nowrap px-2">
