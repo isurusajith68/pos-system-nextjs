@@ -325,6 +325,42 @@ const MenuPage = () => {
     { key: "Esc", description: "Clear cart" },
   ];
 
+  const printBill = async (data: {
+    totalBill: number;
+    discountAmount: number;
+    changeAmount: number;
+    cashAmount: number;
+    date: string;
+    time: string;
+  }) => {
+    const { totalBill, discountAmount, changeAmount, cashAmount, date, time } =
+      data;
+    const bill = {
+      totalBill,
+      discountAmount,
+      changeAmount,
+      cashAmount,
+      date,
+      time,
+      cart,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/print", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bill),
+      });
+      const result = await response.json();
+      if (result.success) {
+        alert("Receipt sent to printer!");
+      }
+    } catch (error) {
+      console.error("Print error:", error);
+      alert("Failed to print. Make sure the print server is running.");
+    }
+  };
+
   return (
     <div className="container mx-auto border-none ring-0">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -666,7 +702,17 @@ const MenuPage = () => {
           <div className="p-2 space-y-2">
             <Button
               className="w-full hover:bg-primary/90 transition-colors"
-              onClick={() => reactToPrintFn()}
+              onClick={() =>
+                printBill({
+                  date: date,
+                  time: time,
+                  total: totalBill,
+                  cash: cashAmount,
+                  change: changeAmount,
+                  discount: discount,
+                  items: cart,
+                })
+              }
             >
               <Printer className="mr-2 h-4 w-4" /> Print Bill (P)
             </Button>
