@@ -332,6 +332,12 @@ const MenuPage = () => {
     cashAmount: number;
     date: string;
     time: string;
+    cart: {
+      id: string;
+      name: string;
+      price: number;
+      quantity: number;
+    }[];
   }) => {
     const { totalBill, discountAmount, changeAmount, cashAmount, date, time } =
       data;
@@ -706,11 +712,11 @@ const MenuPage = () => {
                 printBill({
                   date: date,
                   time: time,
-                  total: totalBill,
-                  cash: cashAmount,
-                  change: changeAmount,
-                  discount: discount,
-                  items: cart,
+                  totalBill: totalBill,
+                  cashAmount: cashAmount, 
+                  changeAmount: changeAmount, 
+                  discountAmount: discount,
+                  cart: cart,
                 })
               }
             >
