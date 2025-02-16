@@ -35,6 +35,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { debounce } from "lodash";
+import { addBill } from "@/services/bill";
 
 const MenuPage = () => {
   const { categories, setCategories, loading, setLoading } = useCategoryStore();
@@ -341,6 +342,26 @@ const MenuPage = () => {
   }) => {
     const { totalBill, discountAmount, changeAmount, cashAmount, date, time } =
       data;
+
+    //add the bill to the database
+
+    const result = await addBill({
+      totalBill,
+      discountAmount,
+      changeAmount,
+      cashAmount,
+      date,
+      time,
+      cart,
+    });
+
+    console.log(result);
+    if (result.success) {
+      alert("Bill added successfully!");
+    } else {
+      alert("Failed to add bill");
+    }
+
     const bill = {
       totalBill,
       discountAmount,
@@ -713,8 +734,8 @@ const MenuPage = () => {
                   date: date,
                   time: time,
                   totalBill: totalBill,
-                  cashAmount: cashAmount, 
-                  changeAmount: changeAmount, 
+                  cashAmount: cashAmount,
+                  changeAmount: changeAmount,
                   discountAmount: discount,
                   cart: cart,
                 })

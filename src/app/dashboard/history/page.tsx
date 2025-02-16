@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -19,89 +19,114 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, Search } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-const billHistory = [
-  {
-    id: 1,
-    billNumber: "BILL001",
-    date: "2023-06-01",
-    time: "14:30",
-    cashier: "John Doe",
-    total: 45.99,
-    cash: 50.0,
-    change: 4.01,
-  },
-  {
-    id: 2,
-    billNumber: "BILL002",
-    date: "2023-06-02",
-    time: "11:15",
-    cashier: "Jane Smith",
-    total: 32.5,
-    cash: 35.0,
-    change: 2.5,
-  },
-  {
-    id: 3,
-    billNumber: "BILL003",
-    date: "2023-06-03",
-    time: "18:45",
-    cashier: "Mike Johnson",
-    total: 78.25,
-    cash: 80.0,
-    change: 1.75,
-  },
-  {
-    id: 4,
-    billNumber: "BILL004",
-    date: "2023-06-04",
-    time: "09:20",
-    cashier: "Sarah Brown",
-    total: 22.99,
-    cash: 25.0,
-    change: 2.01,
-  },
-  {
-    id: 5,
-    billNumber: "BILL005",
-    date: "2023-06-05",
-    time: "20:10",
-    cashier: "Chris Lee",
-    total: 55.75,
-    cash: 60.0,
-    change: 4.25,
-  },
-];
+import { CalendarIcon, ClockIcon, Eye, Search } from "lucide-react";
+import { getBillStats } from "@/services/bill";
+import { useBillStore } from "@/store/useBillStore";
+import { Popover } from "@radix-ui/react-popover";
+import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { RiResetRightLine } from "react-icons/ri";
 
 const BillHistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const { fetchBills, billHistory } = useBillStore();
+  const [spinning, setSpinning] = useState(false);
 
-  const filteredBills = billHistory.filter(
-    (bill) =>
+  useEffect(() => {
+    fetchBills();
+  }, []);
+
+  const filteredBills = billHistory.filter((bill) => {
+    const isSearchMatch =
       bill.billNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bill.date.includes(searchTerm) ||
-      bill.cashier.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      bill.date.includes(searchTerm);
+
+    const isDateMatch =
+      (!startDate || new Date(bill.date) >= new Date(startDate)) &&
+      (!endDate || new Date(bill.date) <= new Date(endDate));
+
+    return isSearchMatch && isDateMatch;
+  });
+
+  const handleReset = () => {
+    setSpinning(true);
+    setTimeout(() => {
+      setStartDate("");
+      setEndDate("");
+      setSearchTerm("");
+      setSpinning(false);
+    }, 200);
+  };
 
   const BillDetails = ({ bill }: { bill: (typeof billHistory)[0] }) => (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
-        <p className="font-semibold">Date:</p>
-        <p>{bill.date}</p>
-        <p className="font-semibold">Time:</p>
-        <p>{bill.time}</p>
-        <p className="font-semibold">Cashier:</p>
-        <p>{bill.cashier}</p>
-        <p className="font-semibold">Total:</p>
-        <p>${bill.total.toFixed(2)}</p>
-        <p className="font-semibold">Cash:</p>
-        <p>${bill.cash.toFixed(2)}</p>
-        <p className="font-semibold">Change:</p>
-        <p>${bill.change.toFixed(2)}</p>
-      </div>
-    </div>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader className="border-b">
+        <CardTitle className="text-2xl font-bold">Bill Details</CardTitle>
+        <div className="flex justify-between items-center text-muted-foreground">
+          <div className="flex items-center">
+            <CalendarIcon className="w-4 h-4 mr-2" />
+            <span>{bill.date}</span>
+          </div>
+          <div className="flex items-center">
+            <ClockIcon className="w-4 h-4 mr-2" />
+            <span>{bill.time}</span>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Item</TableHead>
+              <TableHead>Qty</TableHead>
+              <TableHead className="text-right">Price</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {bill?.cart.map((item, index) => (
+              <TableRow key={index}>
+                <TableCell>{item.name}</TableCell>
+                <TableCell>
+                  {item.quantity} * Rs {Number(item.price).toFixed(2)}
+                </TableCell>
+                <TableCell className="text-right">
+                  Rs {Number(item.price * item.quantity).toFixed(2)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <div className="mt-6 space-y-2">
+          <div className="flex justify-between items-center text-lg font-semibold">
+            <span>Total:</span>
+            <span>Rs {bill.total.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center text-lg font-semibold">
+            <span>Discount:</span>
+            <span>{bill.discount} %</span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span>Cash:</span>
+            <span>Rs {bill.cash.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center text-lg font-semibold text-green-600">
+            <span>Change:</span>
+            <span>Rs {bill.change.toFixed(2)}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 
   return (
@@ -119,9 +144,77 @@ const BillHistoryPage = () => {
           />
           <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
         </div>
+
+        <div className="flex space-x-4">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !startDate && !endDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2" />
+                {startDate && endDate ? (
+                  `From ${format(new Date(startDate), "PPP")} to ${format(
+                    new Date(endDate),
+                    "PPP"
+                  )}`
+                ) : (
+                  <span>Select Date Range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label>Start Date</label>
+                  <Calendar
+                    mode="single"
+                    selected={startDate ? new Date(startDate) : null}
+                    onSelect={(date) =>
+                      setStartDate(date ? date.toISOString() : "")
+                    }
+                    initialFocus
+                  />
+                </div>
+                <div>
+                  <label>End Date</label>
+                  <Calendar
+                    mode="single"
+                    selected={endDate ? new Date(endDate) : null}
+                    onSelect={(date) =>
+                      setEndDate(date ? date.toISOString() : "")
+                    }
+                    initialFocus
+                  />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        <div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="bg-primary p-1 rounded-full text-secondary">
+                  <RiResetRightLine
+                    onClick={handleReset}
+                    className={`h-6 w-6 cursor-pointer ${
+                      spinning ? "animate-spin" : ""
+                    }`}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" align="center" sideOffset={16}>
+                <p>Reset</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        </div>
       </div>
 
-      {/* Mobile View */}
       <div className="block md:hidden space-y-4">
         {filteredBills.map((bill) => (
           <Card key={bill.id} className="w-full">
@@ -161,16 +254,14 @@ const BillHistoryPage = () => {
                   {bill.date} {bill.time}
                 </div>
                 <div className="text-muted-foreground">Cashier:</div>
-                <div>{bill.cashier}</div>
                 <div className="text-muted-foreground">Total:</div>
-                <div className="font-medium">${bill.total.toFixed(2)}</div>
+                <div className="font-medium">Rs {bill.total.toFixed(2)}</div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Desktop View */}
       <div className="hidden md:block">
         <Card>
           <CardHeader>
@@ -183,7 +274,6 @@ const BillHistoryPage = () => {
                   <TableHead>Bill Number</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Time</TableHead>
-                  <TableHead>Cashier</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Cash</TableHead>
                   <TableHead>Change</TableHead>
@@ -198,10 +288,9 @@ const BillHistoryPage = () => {
                     </TableCell>
                     <TableCell>{bill.date}</TableCell>
                     <TableCell>{bill.time}</TableCell>
-                    <TableCell>{bill.cashier}</TableCell>
-                    <TableCell>${bill.total.toFixed(2)}</TableCell>
-                    <TableCell>${bill.cash.toFixed(2)}</TableCell>
-                    <TableCell>${bill.change.toFixed(2)}</TableCell>
+                    <TableCell>Rs {bill.total.toFixed(2)}</TableCell>
+                    <TableCell>Rs {bill.cash.toFixed(2)}</TableCell>
+                    <TableCell>Rs {bill.change.toFixed(2)}</TableCell>
                     <TableCell>
                       <Dialog>
                         <DialogTrigger asChild>

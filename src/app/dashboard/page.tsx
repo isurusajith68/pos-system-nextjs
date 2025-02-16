@@ -11,7 +11,6 @@ import {
 } from "recharts";
 import { Package, Users, ListIcon as Category, DollarSign } from "lucide-react";
 
-// Mock data for the chart
 const salesData = [
   { day: "Mon", sales: 1000 },
   { day: "Tue", sales: 1200 },
