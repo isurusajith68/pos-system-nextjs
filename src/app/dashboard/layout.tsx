@@ -19,8 +19,22 @@ const Layout = ({ children }: LayoutProps) => {
       setScrollRef(scrollRef);
     }
   }, [setScrollRef]);
+
+  useEffect(() => {
+    const noSelectElements = document.querySelectorAll(".no-select");
+    noSelectElements.forEach((element) => {
+      element.addEventListener("selectstart", (e) => e.preventDefault());
+      element.addEventListener("dragstart", (e) => e.preventDefault());
+      element.addEventListener("contextmenu", (e) => e.preventDefault());
+      element.addEventListener("copy", (e) => e.preventDefault());
+      element.addEventListener("cut", (e) => e.preventDefault());
+      element.addEventListener("paste", (e) => e.preventDefault());
+      element.addEventListener("drop", (e) => e.preventDefault());
+    });
+  }, []);
+
   return (
-    <div className="flex sm:h-screen flex-col h-dvh">
+    <div className="flex sm:h-screen flex-col h-dvh no-select">
       <NavBar />
       <div className="flex flex-1">
         <Sidebar />

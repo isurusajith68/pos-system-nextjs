@@ -12,13 +12,29 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Minus, Printer, UtensilsCrossed, Loader } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  Printer,
+  UtensilsCrossed,
+  Loader,
+  Keyboard,
+} from "lucide-react";
 import { useCategoryStore, useProductStore } from "@/store/useCategoryStore";
 import { getCategories } from "@/services/category";
 import Image from "next/image";
 import { getProducts } from "@/services/product";
 import { Input } from "@/components/ui/input";
 import { useReactToPrint } from "react-to-print";
+import { useHotkeys } from "react-hotkeys-hook";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { debounce } from "lodash";
 
 const MenuPage = () => {
   const { categories, setCategories, loading, setLoading } = useCategoryStore();
@@ -26,14 +42,26 @@ const MenuPage = () => {
     useProductStore();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedProductIndex, setSelectedProductIndex] = useState<number>(-1);
+  const [isKeyboardNavigating, setIsKeyboardNavigating] = useState(false);
   const [cart, setCart] = useState<
-    { id: string; name: string; price: number; quantity: number }[]
+    {
+      id: string;
+      name: string;
+      price: number;
+      quantity: number;
+    }[]
   >([]);
   const [date, setDate] = useState<string>("");
   const [time, setTime] = useState<string>("");
   const [cashAmount, setCashAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const cashInputRef = useRef<HTMLInputElement>(null);
+  const discountInputRef = useRef<HTMLInputElement>(null);
+  const selectedProductRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -47,6 +75,16 @@ const MenuPage = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (selectedProductRef.current && isKeyboardNavigating) {
+      selectedProductRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [selectedProductIndex, isKeyboardNavigating]);
+
   const loadCategories = async () => {
     setLoading(true);
     try {
@@ -116,35 +154,237 @@ const MenuPage = () => {
     });
   };
 
-  // Calculate total bill with discount
+  const clearCart = () => {
+    setCart([]);
+    setCashAmount(0);
+    setDiscount(0);
+    if (cashInputRef.current) cashInputRef.current.value = "";
+    if (discountInputRef.current) discountInputRef.current.value = "";
+  };
+
   const totalBill = cart.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
   const discountAmount = (totalBill * discount) / 100;
-
   const changeAmount = cashAmount - totalBill + discountAmount;
 
-  const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
 
+  const debouncedSetSelectedProductIndex = debounce((index) => {
+    setSelectedProductIndex(index);
+  }, 50);
+
+  useHotkeys("enter", () => {
+    if (
+      filteredProductsByCategoryAndSearch.length > 0 &&
+      selectedProductIndex >= 0
+    ) {
+      addToCart({
+        id: filteredProductsByCategoryAndSearch[selectedProductIndex]._id,
+        name: filteredProductsByCategoryAndSearch[selectedProductIndex].name,
+        price: filteredProductsByCategoryAndSearch[selectedProductIndex].price,
+      });
+    }
+  });
+
+  useHotkeys("arrowleft", () => {
+    setIsKeyboardNavigating(true);
+    if (selectedProductIndex > 0) {
+      debouncedSetSelectedProductIndex(selectedProductIndex - 1);
+    }
+  });
+
+  useHotkeys("arrowright", () => {
+    setIsKeyboardNavigating(true);
+    if (selectedProductIndex < filteredProductsByCategoryAndSearch.length - 1) {
+      debouncedSetSelectedProductIndex(selectedProductIndex + 1);
+    }
+  });
+
+  useHotkeys("arrowup", () => {
+    setIsKeyboardNavigating(true);
+    if (selectedProductIndex > 3) {
+      debouncedSetSelectedProductIndex(selectedProductIndex - 4);
+    }
+  });
+
+  useHotkeys("arrowdown", () => {
+    setIsKeyboardNavigating(true);
+    if (selectedProductIndex < filteredProductsByCategoryAndSearch.length - 4) {
+      debouncedSetSelectedProductIndex(selectedProductIndex + 4);
+    } else if (
+      selectedProductIndex <
+      filteredProductsByCategoryAndSearch.length - 3
+    ) {
+      debouncedSetSelectedProductIndex(selectedProductIndex + 3);
+    } else if (
+      selectedProductIndex <
+      filteredProductsByCategoryAndSearch.length - 2
+    ) {
+      debouncedSetSelectedProductIndex(selectedProductIndex + 2);
+    } else if (
+      selectedProductIndex <
+      filteredProductsByCategoryAndSearch.length - 1
+    ) {
+      debouncedSetSelectedProductIndex(selectedProductIndex + 1);
+    } else if (
+      selectedProductIndex === -1 &&
+      filteredProductsByCategoryAndSearch.length > 0
+    ) {
+      debouncedSetSelectedProductIndex(0);
+    }
+  });
+
+  useEffect(() => {
+    const handleMouseMove = () => {
+      setIsKeyboardNavigating(false);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  useHotkeys("backspace", () => {
+    if (selectedProductIndex >= 0) {
+      const productToRemove =
+        filteredProductsByCategoryAndSearch[selectedProductIndex];
+
+      setCart((prevCart) => {
+        const updatedCart = prevCart
+          .map((item) => {
+            if (item.id === productToRemove._id && item.quantity > 1) {
+              return { ...item, quantity: item.quantity - 1 };
+            }
+            return item.id === productToRemove._id && item.quantity === 1
+              ? null
+              : item;
+          })
+          .filter((item) => item !== null);
+
+        return updatedCart;
+      });
+    }
+  });
+
+  useHotkeys("plus", () => {
+    if (cart.length > 0) {
+      const firstItemInCart = cart[0];
+      addToCart(firstItemInCart);
+    }
+  });
+
+  useHotkeys("minus", () => {
+    if (cart.length > 0) {
+      const firstItemInCart = cart[0];
+      removeFromCart(firstItemInCart.id);
+    }
+  });
+
+  useHotkeys("p", () => {
+    reactToPrintFn();
+  });
+
+  useHotkeys("s", (e) => {
+    e.preventDefault();
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  });
+
+  useHotkeys("c", (e) => {
+    e.preventDefault();
+    if (cashInputRef.current) {
+      cashInputRef.current.focus();
+    }
+  });
+
+  useHotkeys("d", (e) => {
+    e.preventDefault();
+    if (discountInputRef.current) {
+      discountInputRef.current.focus();
+    }
+  });
+
+  useHotkeys("escape", () => {
+    clearCart();
+  });
+
+  const shortcuts = [
+    { key: "←", description: "Select previous item" },
+    { key: "→", description: "Select next item" },
+    { key: "↑", description: "Select item above" },
+    { key: "↓", description: "Select item below" },
+    { key: "Enter", description: "Add selected item to cart" },
+    { key: "Backspace", description: "Remove selected item from cart" },
+    { key: "S", description: "Focus search input" },
+    { key: "C", description: "Focus cash amount input" },
+    { key: "D", description: "Focus discount input" },
+    { key: "P", description: "Print bill" },
+    { key: "Esc", description: "Clear cart" },
+  ];
+
   return (
-    <div className="container mx-auto ">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4  gap-6">
+    <div className="container mx-auto border-none ring-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3 xl:col-span-3">
-          <Card className=" backdrop-blur-sm shadow-xl ">
+          <Card
+            className={`backdrop-blur-sm shadow-xl transition-all duration-300 `}
+          >
             <CardHeader className="border-b py-2 bg-background">
               <div className="flex items-center justify-between max-sm:flex-col">
                 <CardTitle className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   Menu
                 </CardTitle>
-                <Input
-                  type="text"
-                  placeholder="Search for items"
-                  className="w-1/3 mt-2 max-sm:w-full"
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="text"
+                    placeholder="Search for items (S)"
+                    className="w-64 mt-2 max-sm:w-full focus-visible:ring-2"
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setSelectedProductIndex(-1);
+                    }}
+                    ref={searchInputRef}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        searchInputRef.current?.blur();
+                      }
+                    }}
+                  />
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="hover:bg-primary/10"
+                      >
+                        <Keyboard className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Keyboard Shortcuts</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid grid-cols-2 gap-4">
+                        {shortcuts.map((shortcut) => (
+                          <div
+                            key={shortcut.key}
+                            className="flex items-center gap-2"
+                          >
+                            <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">
+                              {shortcut.key}
+                            </kbd>
+                            <span className="text-sm">
+                              {shortcut.description}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <UtensilsCrossed className="h-8 w-8 text-primary opacity-80 max-sm:hidden" />
               </div>
               <ScrollArea className="w-full max-w-full overflow-y-hidden py-4">
@@ -190,69 +430,91 @@ const MenuPage = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredProductsByCategoryAndSearch.map((product) => (
-                      <Card
-                        key={product._id}
-                        className="overflow-hidden hover:shadow-xl transition-all duration-300 group"
-                      >
-                        <div className="relative h-32 overflow-hidden">
-                          <Image
-                            src={
-                              product.image ? product.image : "/placeholder.png"
-                            }
-                            alt={product.name}
-                            width={200}
-                            height={200}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <Badge
-                            variant="secondary"
-                            className="absolute top-3 right-3 dark:bg-white/90 text-primary-foreground bg-black/90 backdrop-blur-sm"
-                          >
-                            {product.category}
-                          </Badge>
-                        </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold text-lg mb-1 capitalize">
-                            {product.name}
-                          </h3>
-
-                          <div className="flex justify-between items-center mb-4">
-                            <div className="text-lg font-bold text-destructive dark:text-red-500">
-                              <p className="font-bold text-lg ">
-                                Rs{" "}
-                                {parseFloat(product.price.toString()).toFixed(
-                                  2
-                                )}
-                              </p>
-                            </div>
+                    {filteredProductsByCategoryAndSearch.map(
+                      (product, index) => (
+                        <Card
+                          key={product._id}
+                          ref={
+                            index === selectedProductIndex
+                              ? selectedProductRef
+                              : null
+                          }
+                          className={`overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer ${
+                            selectedProductIndex === index
+                              ? "border-2 border-primary"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            setSelectedProductIndex(index);
+                            addToCart({
+                              id: product._id,
+                              name: product.name,
+                              price: product.price,
+                            });
+                          }}
+                        >
+                          <div className="relative h-32 overflow-hidden">
+                            <Image
+                              src={
+                                product.image
+                                  ? product.image
+                                  : "/placeholder.png"
+                              }
+                              alt={product.name}
+                              width={200}
+                              height={200}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <Badge
-                              variant="outline"
-                              className={`${
-                                product.stock > 10
-                                  ? "text-green-600 border-green-600"
-                                  : "text-orange-600 border-orange-600 "
-                              }`}
+                              variant="secondary"
+                              className="absolute top-3 right-3 dark:bg-white/90 text-primary-foreground bg-black/90 backdrop-blur-sm"
                             >
-                              {product.stock} left
+                              {product.category}
                             </Badge>
                           </div>
-                          <Button
-                            onClick={() =>
-                              addToCart({
-                                id: product._id,
-                                name: product.name,
-                                price: product.price,
-                              })
-                            }
-                            className="w-full bg-primary hover:bg-primary/90  group-hover:scale-105 transition-transform"
-                          >
-                            Add to Bill
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          <CardContent className="p-4">
+                            <h3 className="font-semibold text-lg mb-1 capitalize">
+                              {product.name}
+                            </h3>
+
+                            <div className="flex justify-between items-center mb-4">
+                              <div className="text-lg font-bold text-destructive dark:text-red-500">
+                                <p className="font-bold text-lg ">
+                                  Rs{" "}
+                                  {parseFloat(product.price.toString()).toFixed(
+                                    2
+                                  )}
+                                </p>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className={`${
+                                  product.stock > 10
+                                    ? "text-green-600 border-green-600"
+                                    : "text-orange-600 border-orange-600 "
+                                }`}
+                              >
+                                {product.stock} left
+                              </Badge>
+                            </div>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart({
+                                  id: product._id,
+                                  name: product.name,
+                                  price: product.price,
+                                });
+                              }}
+                              className="w-full bg-primary hover:bg-primary/90 group-hover:scale-105 transition-transform"
+                            >
+                              Add to Bill
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      )
+                    )}
                   </div>
                 )}
               </ScrollArea>
@@ -262,10 +524,11 @@ const MenuPage = () => {
         <Card className="w-full max-w-xs mx-auto">
           <div className="flex justify-between items-center p-4 gap-2">
             <div>
-              <span className="text-xs">Given Amount</span>
+              <span className="text-xs">Given Amount (C)</span>
               <Input
                 placeholder="amount_given"
                 type="number"
+                ref={cashInputRef}
                 onChange={(e) => {
                   const value = parseFloat(e.target.value);
                   if (!isNaN(value) && value >= 0) {
@@ -275,14 +538,21 @@ const MenuPage = () => {
                     setCashAmount(0);
                   }
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    cashInputRef.current?.blur();
+                  }
+                }}
+                className="focus-visible:ring-2"
               />
             </div>
 
             <div>
-              <span className="text-xs">Discount</span>
+              <span className="text-xs">Discount (D)</span>
               <Input
                 placeholder="discount"
                 type="number"
+                ref={discountInputRef}
                 onChange={(e) => {
                   let value = parseFloat(e.target.value);
 
@@ -296,6 +566,12 @@ const MenuPage = () => {
 
                   setDiscount(value);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    discountInputRef.current?.blur();
+                  }
+                }}
+                className="focus-visible:ring-2"
               />
             </div>
           </div>
@@ -335,7 +611,7 @@ const MenuPage = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => removeFromCart(item.id)}
-                        className="h-8 w-8 rounded-full"
+                        className="h-8 w-8 rounded-full hover:bg-destructive/10"
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -344,7 +620,7 @@ const MenuPage = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => addToCart(item)}
-                        className="h-8 w-8 rounded-full"
+                        className="h-8 w-8 rounded-full hover:bg-primary/10"
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -387,9 +663,19 @@ const MenuPage = () => {
               </span>
             </CardFooter>
           </ScrollArea>
-          <div className="p-2">
-            <Button className="w-full" onClick={() => reactToPrintFn()}>
-              <Printer className="mr-2 h-4 w-4" /> Print Bill
+          <div className="p-2 space-y-2">
+            <Button
+              className="w-full hover:bg-primary/90 transition-colors"
+              onClick={() => reactToPrintFn()}
+            >
+              <Printer className="mr-2 h-4 w-4" /> Print Bill (P)
+            </Button>
+            <Button
+              variant="destructive"
+              className="w-full hover:bg-destructive/90 transition-colors"
+              onClick={() => clearCart()}
+            >
+              Clear Cart (Esc)
             </Button>
           </div>
         </Card>
