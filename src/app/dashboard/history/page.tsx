@@ -4,6 +4,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -66,6 +67,11 @@ const BillHistoryPage = () => {
       setSearchTerm("");
       setSpinning(false);
     }, 200);
+  };
+
+  const getBillStats = (bills: (typeof billHistory)[0][]) => {
+    const totalSales = filteredBills.reduce((acc, bill) => acc + bill.total, 0);
+    return { totalSales };
   };
 
   const BillDetails = ({ bill }: { bill: (typeof billHistory)[0] }) => (
@@ -271,6 +277,25 @@ const BillHistoryPage = () => {
           </CardHeader>
           <CardContent className="p-0 sm:p-6">
             <Table>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={7}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">
+                        Showing {filteredBills.length} of {billHistory.length}{" "}
+                        bills
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        {/**total sales price*/}
+                        <span className="text-muted-foreground">
+                          Total Sales: Rs{" "}
+                          {getBillStats(billHistory).totalSales.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
               <TableHeader>
                 <TableRow>
                   <TableHead>Bill Number</TableHead>
