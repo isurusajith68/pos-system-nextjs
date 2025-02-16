@@ -28,7 +28,7 @@ export default function Navbar() {
     const loadUser = async () => {
       const user = await getUserFromCookie();
       if (!user) {
-        redirect("/login");
+        redirect("/");
       }
       setUser(user);
       console.log(user);
