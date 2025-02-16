@@ -59,6 +59,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useScrollStore } from "@/store/useScrollRef";
+import { scrollToTop } from "@/components/scrollToTop";
 
 const formSchema = z.object({
   productName: z
@@ -108,7 +110,6 @@ export default function ProductManagement() {
   const [spinning, setSpinning] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name
       .toLowerCase()
@@ -309,6 +310,8 @@ export default function ProductManagement() {
     form.setValue("category", product.category);
     form.setValue("stock", product.stock.toString());
     setProductImage(product.image);
+
+    scrollToTop(document.getElementById("scroll-area"), true);
   };
 
   const ProductCard = ({ product }) => (
@@ -385,7 +388,7 @@ export default function ProductManagement() {
   );
 
   return (
-    <div className="container mx-auto py-5 sm:px-4 ">
+    <div className="container mx-auto py-5 sm:px-4 scroll-area" id="scroll-area">
       <h1 className="text-xl font-bold text-primary mb-6">Products</h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="">

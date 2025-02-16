@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useCategoryStore } from "@/store/useCategoryStore";
+import { scrollToTop } from "@/components/scrollToTop";
 
 const formSchema = z.object({
   categoryName: z.string().min(2, {
@@ -187,6 +188,8 @@ export default function CategoryManagement() {
     setEditingCategory({ id, name, image });
     form.setValue("categoryName", name);
     setCategoryImage(image || undefined);
+
+    scrollToTop(document.getElementById("scroll-area-c"), true);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -208,7 +211,7 @@ export default function CategoryManagement() {
   });
 
   return (
-    <div className="container mx-auto py-5">
+    <div className="container mx-auto py-5 scroll-area-c" id="scroll-area-c">
       <h1 className="text-xl font-bold text-primary mb-6">Category</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="md:col-span-1">

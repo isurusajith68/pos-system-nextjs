@@ -1,38 +1,31 @@
+"use client";
+
 import NavBar from "@/components/NavBar";
 import Sidebar from "@/components/Sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import React from "react";
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-
-import { ReactNode } from "react";
+import React, { useEffect, useRef } from "react";
+import { useScrollStore } from "@/store/useScrollRef";
 
 interface LayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const Layout = ({ children }: LayoutProps) => {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const { setScrollRef } = useScrollStore();
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "POS System",
-  description: "POS System",
-};
-
-const layout = async ({ children }: LayoutProps) => {
+  useEffect(() => {
+    if (scrollRef.current) {
+      setScrollRef(scrollRef);
+    }
+  }, [setScrollRef]);
   return (
     <div className="flex sm:h-screen flex-col h-dvh">
       <NavBar />
       <div className="flex flex-1">
         <Sidebar />
         <ScrollArea
+          ref={scrollRef}
           className="flex-1 p-4 overflow-y-auto rounded-tl-2xl bg-secondary"
           style={{ height: "calc(100dvh - 60px)" }}
         >
@@ -43,4 +36,4 @@ const layout = async ({ children }: LayoutProps) => {
   );
 };
 
-export default layout;
+export default Layout;
