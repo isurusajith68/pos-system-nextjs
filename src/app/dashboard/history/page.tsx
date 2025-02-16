@@ -186,6 +186,7 @@ const BillHistoryPage = () => {
                       setStartDate(date ? date.toISOString() : "")
                     }
                     initialFocus
+                    
                   />
                 </div>
                 <div>
