@@ -1,10 +1,12 @@
 "use server";
 
 import { connectToDatabase } from "@/lib/mongodb";
+import { endOfDay, startOfDay, sub } from "date-fns";
 
 export const addBill = async (bill: {
   totalBill: number;
-  discountAmount: number;
+  subTotal: number;
+  discount: number;
   changeAmount: number;
   cashAmount: number;
   date: string;
@@ -38,7 +40,8 @@ export const addBill = async (bill: {
     const billData = {
       billNo,
       totalBill: bill.totalBill,
-      discount: bill.discountAmount,
+      subTotal: bill.subTotal,
+      discount: bill.discount,
       changeAmount: bill.changeAmount,
       cashAmount: bill.cashAmount,
       date: bill.date,
@@ -61,7 +64,10 @@ export const getBills = async () => {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
 
-    const bills = await billsCollection.find({}).toArray();
+    const bills = await billsCollection
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
 
     const serializableBills = bills.map((bill) => ({
       id: bill._id.toString(),
@@ -69,6 +75,7 @@ export const getBills = async () => {
       date: bill.date,
       time: bill.time,
       total: bill.totalBill,
+      subTotal: bill.subTotal,
       cash: bill.cashAmount,
       change: bill.changeAmount,
       discount: bill.discount,
@@ -86,9 +93,14 @@ export const getBills = async () => {
 export const getBillStats = async () => {
   try {
     const db = await connectToDatabase();
-    const billsCollection = db.collection("bills");
-    const totalBills = await billsCollection.countDocuments();
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
 
+    const billsCollection = db.collection("bills");
+    const totalSales = await billsCollection.countDocuments({
+      createdAt: { $gte: startOfToday, $lt: endOfToday },
+    });
     const usersCollection = db.collection("users");
     const totalUsers = await usersCollection.countDocuments();
 
@@ -98,15 +110,61 @@ export const getBillStats = async () => {
     const categoriesCollection = db.collection("categories");
     const totalCategories = await categoriesCollection.countDocuments();
 
+    const totalRevenue = await billsCollection
+      .aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startOfToday, $lt: endOfToday },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$totalBill" },
+          },
+        },
+      ])
+      .toArray();
+
     return {
       success: true,
-      totalBills,
+      totalSales,
       totalUsers,
       totalProducts,
       totalCategories,
+      totalRevenue: totalRevenue[0]?.total || 0,
     };
   } catch (error) {
     console.error("Error fetching bill stats:", error);
     return { success: false, error: "Failed to fetch bill stats" };
+  }
+};
+
+export const getDailySales = async () => {
+  try {
+    const db = await connectToDatabase();
+    const billsCollection = db.collection("bills");
+
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
+
+    const dailySales = await billsCollection
+      .aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startOfToday, $lt: endOfToday },
+          },
+        },
+      ])
+      .toArray();
+    console.log(dailySales);
+    return dailySales.map((bill) => ({
+      ...bill,
+      _id: bill._id.toString(),
+    }));
+  } catch (error) {
+    console.error("Error fetching daily sales:", error);
+    return [];
   }
 };

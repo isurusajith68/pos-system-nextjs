@@ -108,14 +108,17 @@ const BillHistoryPage = () => {
         </Table>
         <div className="mt-6 space-y-2">
           <div className="flex justify-between items-center text-lg font-semibold">
-            <span>Total:</span>
-            <span>Rs {bill.total.toFixed(2)}</span>
+            <span>Sub Total:</span>
+            <span>Rs {bill.subTotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-center text-lg font-semibold">
             <span>Discount:</span>
             <span>{bill.discount} %</span>
           </div>
-
+          <div className="flex justify-between items-center text-lg font-semibold">
+            <span>Total:</span>
+            <span>Rs {bill.total.toFixed(2)}</span>
+          </div>
           <div className="flex justify-between items-center">
             <span>Cash:</span>
             <span>Rs {bill.cash.toFixed(2)}</span>
@@ -253,7 +256,6 @@ const BillHistoryPage = () => {
                 <div>
                   {bill.date} {bill.time}
                 </div>
-                <div className="text-muted-foreground">Cashier:</div>
                 <div className="text-muted-foreground">Total:</div>
                 <div className="font-medium">Rs {bill.total.toFixed(2)}</div>
               </div>

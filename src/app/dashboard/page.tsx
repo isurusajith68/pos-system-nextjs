@@ -10,6 +10,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Package, Users, ListIcon as Category, DollarSign } from "lucide-react";
+import { useEffect } from "react";
+import { getBillStats, getDailySales } from "@/services/bill";
+import { useStats } from "@/store/useStats";
 
 const salesData = [
   { day: "Mon", sales: 1000 },
@@ -22,6 +25,35 @@ const salesData = [
 ];
 
 const DashboardPage = () => {
+  const {
+    totalRevenue,
+    totalUsers,
+    totalProducts,
+    totalCategories,
+    totalSales,
+    setTotalRevenue,
+    setTotalBills,
+    setTotalUsers,
+    setTotalProducts,
+    setTotalCategories,
+    setTotalSales,
+  } = useStats();
+
+  useEffect(() => {
+    getBillStats().then((data) => {
+      if (data.success) {
+        setTotalRevenue(data.totalRevenue);
+        setTotalSales(data.totalSales);
+        setTotalUsers(data.totalUsers);
+        setTotalProducts(data.totalProducts);
+        setTotalCategories(data.totalCategories);
+      }
+    });
+    getDailySales().then((data) => {
+      console.log(data);
+    });
+  }, []);
+
   return (
     <div className="container mx-auto pt-2">
       <h1 className="text-xl font-bold mb-4">Welcome to the Dashboard</h1>
@@ -35,12 +67,13 @@ const DashboardPage = () => {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-2xl font-bold">{totalProducts}</div>
             <p className="text-xs text-muted-foreground">
-              +10% from last month
+              Total number of products available in the inventory.
             </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -49,31 +82,35 @@ const DashboardPage = () => {
             <Category className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">+2 new categories</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">4</div>
+            <div className="text-2xl font-bold">{totalCategories}</div>
             <p className="text-xs text-muted-foreground">
-              1 system admin and 3 staff
+              Number of distinct product categories in the system.
             </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalSales}</div>
+            <p className="text-xs text-muted-foreground">
+              Total sales made in the current period.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Daily Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$12,345</div>
+            <div className="text-2xl font-bold">Rs {totalRevenue}</div>
             <p className="text-xs text-muted-foreground">
-              +15% from last month
+              Total revenue generated in the current period.
             </p>
           </CardContent>
         </Card>

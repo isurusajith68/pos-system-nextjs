@@ -10,6 +10,7 @@ interface Bill {
   time: string;
   cashier: string;
   total: number;
+  subTotal: number;
   cash: number;
   change: number;
   discount: number;

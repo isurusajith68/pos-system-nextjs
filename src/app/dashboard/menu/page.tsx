@@ -328,7 +328,8 @@ const MenuPage = () => {
 
   const printBill = async (data: {
     totalBill: number;
-    discountAmount: number;
+    subTotal: number;
+    discount: number;
     changeAmount: number;
     cashAmount: number;
     date: string;
@@ -340,14 +341,20 @@ const MenuPage = () => {
       quantity: number;
     }[];
   }) => {
-    const { totalBill, discountAmount, changeAmount, cashAmount, date, time } =
-      data;
-
-    //add the bill to the database
+    const {
+      totalBill,
+      discount,
+      subTotal,
+      changeAmount,
+      cashAmount,
+      date,
+      time,
+    } = data;
 
     const result = await addBill({
       totalBill,
-      discountAmount,
+      subTotal,
+      discount,
       changeAmount,
       cashAmount,
       date,
@@ -733,10 +740,13 @@ const MenuPage = () => {
                 printBill({
                   date: date,
                   time: time,
-                  totalBill: totalBill,
+                  totalBill: parseFloat(
+                    (totalBill - discountAmount).toFixed(2)
+                  ),
+                  subTotal: totalBill,
                   cashAmount: cashAmount,
                   changeAmount: changeAmount,
-                  discountAmount: discount,
+                  discount: discount,
                   cart: cart,
                 })
               }
