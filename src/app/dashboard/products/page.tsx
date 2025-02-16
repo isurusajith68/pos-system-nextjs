@@ -385,10 +385,10 @@ export default function ProductManagement() {
   );
 
   return (
-    <div className="container mx-auto py-5 px-4 ">
+    <div className="container mx-auto py-5 sm:px-4 ">
       <h1 className="text-xl font-bold text-primary mb-6">Products</h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="">
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
               {editingProduct ? "Edit Product" : "Add Product"}
@@ -411,7 +411,7 @@ export default function ProductManagement() {
               </TooltipProvider>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="">
             {loadingCategories ? (
               <div className="flex justify-center items-center py-5">
                 <Loader className="h-6 w-6 text-primary animate-spin" />
