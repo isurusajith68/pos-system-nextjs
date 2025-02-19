@@ -63,6 +63,16 @@ const MenuPage = () => {
   const cashInputRef = useRef<HTMLInputElement>(null);
   const discountInputRef = useRef<HTMLInputElement>(null);
   const selectedProductRef = useRef<HTMLDivElement>(null);
+  const dateTimeRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const secondsTimer = setInterval(() => {
+      if (dateTimeRef.current) {
+        dateTimeRef.current.innerText = new Date().toLocaleString();
+      }
+    }, 1000);
+    return () => clearInterval(secondsTimer);
+  }, []);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -657,9 +667,7 @@ const MenuPage = () => {
                 </div>
               </CardTitle>
               <div className="text-sm text-muted-foreground mt-2">
-                <span>Date: {date}</span>
-                <br />
-                <span>Time: {time}</span>
+                <span ref={dateTimeRef}></span>
               </div>
             </CardHeader>
             <CardContent>
