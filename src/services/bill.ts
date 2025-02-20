@@ -30,7 +30,7 @@ export const addBill = async (bill: {
     }
 
     const billNumber = counterDoc?.number || 100;
-    const billNo = `BILL_${billNumber}`;
+    const billNo = `${billNumber}`;
 
     await counterCollection.updateOne(
       { _id: "billNumber" },

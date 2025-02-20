@@ -381,12 +381,14 @@ const MenuPage = () => {
 
     const bill = {
       totalBill,
+      subTotal,
       discountAmount,
       changeAmount,
       cashAmount,
       date,
       time,
       cart,
+      billNo: result.billNo,
     };
 
     try {
@@ -658,7 +660,9 @@ const MenuPage = () => {
           <ScrollArea className="h-[calc(100vh-250px)] border" ref={contentRef}>
             <CardHeader className="text-center">
               <CardTitle>
-                <h2 className="text-2xl font-bold">Vimukthi's Restaurant</h2>
+                <h2 className="text-2xl font-bold">
+                  The Cadbury
+                </h2>
                 <div className="text-sm font-normal text-muted-foreground mt-1">
                   <span>123, Main Street, Colombo 07</span>
                 </div>
