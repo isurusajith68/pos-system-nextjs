@@ -216,14 +216,18 @@ const BillHistoryPage = () => {
             <span>Total:</span>
             <span>Rs {bill.total.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span>Cash:</span>
-            <span>Rs {bill.cash.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between items-center text-lg font-semibold text-green-600">
-            <span>Change:</span>
-            <span>Rs {bill.change.toFixed(2)}</span>
-          </div>
+          {bill.cash > 0 && (
+            <>
+              <div className="flex justify-between items-center">
+                <span>Cash:</span>
+                <span>Rs {bill.cash.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-lg font-semibold text-green-600">
+                <span>Change:</span>
+                <span>Rs {bill.change.toFixed(2)}</span>
+              </div>
+            </>
+          )}
         </div>
       </CardContent>
       <CardFooter>
