@@ -285,7 +285,6 @@ const DashboardPage = () => {
                           type="number"
                           className="w-full px-3 py-2 border rounded-md bg-gray-100 text-muted-foreground"
                           value={startingCash}
-                          readOnly
                           onChange={(e) => setStartingCash(e.target.value)}
                         />
                         <p className="text-xs text-muted-foreground">
@@ -313,7 +312,6 @@ const DashboardPage = () => {
                             type="number"
                             className="w-full px-3 py-2 border rounded-md bg-gray-100 text-muted-foreground"
                             value={startingCash}
-
                             readOnly
                           />
                           <p className="text-xs text-muted-foreground">
@@ -348,7 +346,8 @@ const DashboardPage = () => {
                           readOnly
                         />
                         <p className="text-xs text-muted-foreground">
-                          The cash amount that should be available in the drawer.
+                          The cash amount that should be available in the
+                          drawer.
                         </p>
                       </div>
 
