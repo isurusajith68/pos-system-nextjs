@@ -31,10 +31,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ClockIcon,
+  Delete,
   Eye,
   Search,
+  Trash2,
 } from "lucide-react";
-import { getBillStats, refundBillAction } from "@/services/bill";
+import { getBillStats, refundBillAction, removeBill } from "@/services/bill";
 import { useBillStore } from "@/store/useBillStore";
 import { Popover } from "@radix-ui/react-popover";
 import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -62,6 +64,17 @@ import {
 } from "@/components/ui/tooltip";
 import { RiRefundFill, RiResetRightLine } from "react-icons/ri";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -343,8 +356,6 @@ const BillHistoryPage = () => {
             </Button>
           </div>
 
-          
-
           <div>
             <TooltipProvider>
               <Tooltip>
@@ -412,7 +423,6 @@ const BillHistoryPage = () => {
           </Card>
         ))}
 
-        {/* Mobile Pagination */}
         <div className="flex justify-center items-center space-x-2 mt-4">
           <Button
             variant="outline"
@@ -536,13 +546,66 @@ const BillHistoryPage = () => {
                           </div>
                         </DialogContent>
                       </Dialog>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <div className="flex gap-2">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="hover:bg-secondary"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="right"
+                                  align="center"
+                                  sideOffset={16}
+                                >
+                                  <p>
+                                    <span className="font-medium">
+                                      Delete Bill
+                                    </span>
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Delete Bill - {bill.billNumber}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this bill?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-white"
+                              onClick={async () => {
+                                await removeBill(bill.id);
+                                fetchBills();
+                              }}
+                            >
+                              Delete Bill
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
 
-            {/* Desktop Pagination */}
             <div className="flex justify-center items-center space-x-2 mt-4">
               <Button
                 variant="outline"

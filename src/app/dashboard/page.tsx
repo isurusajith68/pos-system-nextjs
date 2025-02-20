@@ -8,6 +8,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Line,
+  LineChart,
 } from "recharts";
 import {
   Package,
@@ -18,7 +20,7 @@ import {
   Loader,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { getBillStats, getDailySales } from "@/services/bill";
+import { getBillStats, getDailySales, salesDataWeekly } from "@/services/bill";
 import { useStats } from "@/store/useStats";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -26,6 +28,7 @@ import { toast, useToast } from "@/hooks/use-toast";
 import { getCash, starterCash, updateCash } from "@/services/cash";
 import { Toaster } from "@/components/ui/toaster";
 import { useCashDrawer } from "@/store/useCashDrawer";
+import { useSalesData } from "@/store/useSalesData";
 
 const salesData = [
   { day: "Mon", sales: 1000 },
@@ -41,6 +44,8 @@ const DashboardPage = () => {
   const dateTimeRef = React.useRef<HTMLSpanElement>(null);
   const [time, setTime] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
   const {
     setDeclaredCash,
     setIsDayEnded,
@@ -72,6 +77,25 @@ const DashboardPage = () => {
   } = useStats();
   const { toast } = useToast();
 
+  const {
+    salesData,
+    setSalesData,
+    isLoading: salesDataLoading,
+    setIsLoading: setIsSalesDataLoading,
+  } = useSalesData() as {
+    salesData: { _id: string; total: number; billCount: number }[];
+    setSalesData: (
+      data: { _id: string; total: number; billCount: number }[]
+    ) => void;
+    isLoading: boolean;
+    setIsLoading: (loading: boolean) => void;
+  };
+  useEffect(() => {
+    if (localStorage.getItem("theme") === "dark") {
+      document.documentElement.classList.add("dark");
+      setDarkMode(true);
+    }
+  }, []);
   useEffect(() => {
     const ex = totalRevenue + Number(startingCash);
     setExpectedCash(ex);
@@ -173,12 +197,42 @@ const DashboardPage = () => {
     return () => clearInterval(secondsTimer);
   }, []);
 
+  React.useEffect(() => {
+    if (salesData && salesData.length > 0) {
+      return;
+    }
+    fetchSalesData();
+  }, []);
+
+  const fetchSalesData = async () => {
+    setIsSalesDataLoading(true);
+    try {
+      const sales = await salesDataWeekly();
+      setIsSalesDataLoading(false);
+      setSalesData(sales);
+      console.log("Sales Data:", sales);
+    } catch (error) {
+      setIsSalesDataLoading(false);
+      console.error("Error fetching sales data:", error);
+    }
+  };
+  const dayOrder = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+
+  const sortedSalesData = salesData.sort(
+    (a: { _id: string }, b: { _id: string }) => {
+      return dayOrder.indexOf(a._id) - dayOrder.indexOf(b._id);
+    }
+  );
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Welcome to the Dashboard
-      </h1>
-
       <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6">
           <Card>
@@ -410,20 +464,50 @@ const DashboardPage = () => {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Daily Sales</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[350px] sm:h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="sales" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
+            {salesDataLoading ? (
+              <div className="flex justify-center items-center py-5">
+                <Loader className="h-6 w-6 text-primary animate-spin" />
+              </div>
+            ) : (
+              <>
+                <CardHeader>
+                  <CardTitle>Weekly Sales & Bill Count</CardTitle>
+                </CardHeader>
+                <CardContent className="h-[350px] sm:h-[400px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={sortedSalesData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="_id" />
+                      <YAxis yAxisId="left" stroke="#8884d8" />{" "}
+                      <YAxis
+                        yAxisId="right"
+                        orientation="right"
+                        stroke="#82ca9d"
+                      />{" "}
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: darkMode ? "black" : "white",
+                        }}
+                      />
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="total"
+                        stroke="#8884d8"
+                        strokeWidth={2}
+                      />{" "}
+                      <Line
+                        yAxisId="right"
+                        type="monotone"
+                        dataKey="billCount"
+                        stroke="#82ca9d"
+                        strokeWidth={2}
+                      />{" "}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </>
+            )}
           </Card>
         </div>
       </>

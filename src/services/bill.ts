@@ -208,3 +208,139 @@ export const refundBillAction = async (billId: string) => {
     return { success: false, error: "Failed to refund bill" };
   }
 };
+
+export const removeBill = async (billId: string) => {
+  try {
+    const db = await connectToDatabase();
+    const billsCollection = db.collection("bills");
+
+    const result = await billsCollection.deleteOne({
+      _id: new ObjectId(billId),
+    });
+
+    if (result.deletedCount === 0) {
+      return { success: false, error: "Bill not found" };
+    }
+
+    return { success: true, message: "Bill deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting bill:", error);
+    return { success: false, error: "Failed to delete bill" };
+  }
+};
+
+export const salesDataMonthly = async () => {
+  try {
+    const db = await connectToDatabase();
+    const billsCollection = db.collection("bills");
+
+    const today = new Date();
+    const startOfMonth = new Date(today.setDate(1));
+    const endOfMonth = new Date(today.setDate(1));
+
+    const monthlySales = await billsCollection
+      .aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startOfMonth, $lt: endOfMonth },
+            refunded: { $ne: true },
+          },
+        },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            total: { $sum: "$totalBill" },
+            billCount: { $sum: 1 },
+          },
+        },
+        {
+          $sort: { _id: 1 },
+        },
+      ])
+      .toArray();
+
+    return monthlySales;
+  } catch (error) {
+    console.error("Error fetching monthly sales:", error);
+    return [];
+  }
+};
+
+export const salesDataWeekly = async () => {
+  try {
+    const db = await connectToDatabase();
+    const billsCollection = db.collection("bills");
+
+    const today = new Date();
+    const startOfWeek = new Date(
+      today.setDate(today.getDate() - today.getDay())
+    );
+    const endOfWeek = new Date(
+      today.setDate(today.getDate() - today.getDay() + 6)
+    );
+    console.log(startOfWeek, endOfWeek);
+    const weeklySales = await billsCollection
+      .aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startOfWeek, $lt: endOfWeek },
+            refunded: { $ne: true },
+          },
+        },
+        {
+          $project: {
+            dayName: {
+              $switch: {
+                branches: [
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 1] },
+                    then: "Sunday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 2] },
+                    then: "Monday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 3] },
+                    then: "Tuesday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 4] },
+                    then: "Wednesday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 5] },
+                    then: "Thursday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 6] },
+                    then: "Friday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 7] },
+                    then: "Saturday",
+                  },
+                ],
+                default: "Unknown",
+              },
+            },
+            totalBill: 1,
+          },
+        },
+        {
+          $group: {
+            _id: "$dayName",
+            total: { $sum: "$totalBill" },
+            billCount: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ])
+      .toArray();
+
+    return weeklySales;
+  } catch (error) {
+    console.error("Error fetching weekly sales:", error);
+    return [];
+  }
+};
