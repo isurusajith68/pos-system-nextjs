@@ -344,13 +344,14 @@ const MenuPage = () => {
     { key: "→", description: "Select next item" },
     { key: "↑", description: "Select item above" },
     { key: "↓", description: "Select item below" },
-    { key: "Enter", description: "Add selected item to cart" },
-    { key: "Backspace", description: "Remove selected item from cart" },
     { key: "S", description: "Focus search input" },
     { key: "C", description: "Focus cash amount input" },
     { key: "D", description: "Focus discount input" },
     { key: "P", description: "Print bill" },
     { key: "Esc", description: "Clear cart" },
+    { key: "Space", description: "Print bill Confirm" },
+    { key: "Enter", description: "Add selected item to cart" },
+    { key: "Backspace", description: "Remove selected item from cart" },
   ];
 
   const printBill = async (data: {

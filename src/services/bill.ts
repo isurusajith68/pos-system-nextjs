@@ -103,6 +103,7 @@ export const getBillStats = async () => {
     const billsCollection = db.collection("bills");
     const totalSales = await billsCollection.countDocuments({
       createdAt: { $gte: startOfToday, $lt: endOfToday },
+      refunded: { $ne: true },
     });
     const usersCollection = db.collection("users");
     const totalUsers = await usersCollection.countDocuments();
@@ -118,6 +119,7 @@ export const getBillStats = async () => {
         {
           $match: {
             createdAt: { $gte: startOfToday, $lt: endOfToday },
+            refunded: { $ne: true },
           },
         },
         {
@@ -157,6 +159,7 @@ export const getDailySales = async () => {
         {
           $match: {
             createdAt: { $gte: startOfToday, $lt: endOfToday },
+            refunded: { $ne: true },
           },
         },
       ])
@@ -194,7 +197,10 @@ export const refundBillAction = async (billId: string) => {
       refundedAt: new Date(),
     };
 
-    await billsCollection.updateOne({ _id: billData._id }, { $set: refundedBill });
+    await billsCollection.updateOne(
+      { _id: billData._id },
+      { $set: refundedBill }
+    );
 
     return { success: true, message: "Bill refunded successfully" };
   } catch (error) {
