@@ -36,6 +36,18 @@ import {
 } from "@/components/ui/dialog";
 import { debounce } from "lodash";
 import { addBill } from "@/services/bill";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const MenuPage = () => {
   const { categories, setCategories, loading, setLoading } = useCategoryStore();
@@ -64,6 +76,9 @@ const MenuPage = () => {
   const discountInputRef = useRef<HTMLInputElement>(null);
   const selectedProductRef = useRef<HTMLDivElement>(null);
   const dateTimeRef = useRef<HTMLSpanElement>(null);
+  const alertDialogRef = useRef<HTMLButtonElement>(null);
+  const printRef = useRef<HTMLButtonElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const secondsTimer = setInterval(() => {
@@ -181,8 +196,6 @@ const MenuPage = () => {
   const discountAmount = (totalBill * discount) / 100;
   const changeAmount = cashAmount - totalBill + discountAmount;
 
-  const reactToPrintFn = useReactToPrint({ contentRef });
-
   const debouncedSetSelectedProductIndex = debounce((index) => {
     setSelectedProductIndex(index);
   }, 50);
@@ -294,7 +307,7 @@ const MenuPage = () => {
   });
 
   useHotkeys("p", () => {
-    reactToPrintFn();
+    alertDialogRef.current?.click();
   });
 
   useHotkeys("s", (e) => {
@@ -320,6 +333,10 @@ const MenuPage = () => {
 
   useHotkeys("escape", () => {
     clearCart();
+  });
+
+  useHotkeys("space", () => {
+    printRef.current?.click();
   });
 
   const shortcuts = [
@@ -361,6 +378,24 @@ const MenuPage = () => {
       time,
     } = data;
 
+    if (totalBill <= 0) {
+      toast({
+        title: "Error",
+        description: "Total bill should be greater than 0",
+        className: "bg-red-500 border-red-500 text-white",
+      });
+      return;
+    }
+
+    if (cart.length === 0) {
+      toast({
+        title: "Error",
+        description: "Cart is empty",
+        className: "bg-red-500 border-red-500 text-white",
+      });
+      return;
+    }
+
     const result = await addBill({
       totalBill,
       subTotal,
@@ -374,9 +409,17 @@ const MenuPage = () => {
 
     console.log(result);
     if (result.success) {
-      alert("Bill added successfully!");
+      toast({
+        title: "Bill added",
+        description: "Bill added successfully",
+        className: "bg-green-500 border-green-500 text-white",
+      });
     } else {
-      alert("Failed to add bill");
+      toast({
+        title: "Error",
+        description: "Failed to add bill",
+        className: "bg-red-500 border-red-500 text-white",
+      });
     }
 
     const bill = {
@@ -399,11 +442,21 @@ const MenuPage = () => {
       });
       const result = await response.json();
       if (result.success) {
-        alert("Receipt sent to printer!");
+        toast({
+          title: "Bill printed",
+          description: "Bill printed successfully",
+          className: "bg-green-500 border-green-500 text-white",
+        });
+        clearCart();
       }
     } catch (error) {
       console.error("Print error:", error);
-      alert("Failed to print. Make sure the print server is running.");
+
+      toast({
+        title: "Error",
+        description: "Failed to print bill",
+        className: "bg-red-500 border-red-500 text-white",
+      });
     }
   };
 
@@ -657,25 +710,9 @@ const MenuPage = () => {
               />
             </div>
           </div>
-          <ScrollArea className="h-[calc(100vh-250px)] border" ref={contentRef}>
-            <CardHeader className="text-center">
-              <CardTitle>
-                <h2 className="text-2xl font-bold">
-                  The Cadbury
-                </h2>
-                <div className="text-sm font-normal text-muted-foreground mt-1">
-                  <span>123, Main Street, Colombo 07</span>
-                </div>
-                <div className="text-sm font-normal text-muted-foreground">
-                  <span>+94 123 456 789</span>
-                </div>
-              </CardTitle>
-              <div className="text-sm text-muted-foreground mt-2">
-                <span ref={dateTimeRef}></span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+          <ScrollArea className="h-[calc(100vh-450px)] border" ref={contentRef}>
+            <CardContent className="p-2">
+              <div className="space-y-2">
                 {cart.map((item) => (
                   <div
                     key={item.id}
@@ -709,62 +746,81 @@ const MenuPage = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-              <Separator className="my-4" />
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <p>Subtotal:</p>
-                  <p>Rs {totalBill.toFixed(2)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p>Discount:</p>
-                  <p>{discount}%</p>
-                </div>
-                <div className="flex justify-between">
-                  <p>Total:</p>
-                  <p className="font-bold">
-                    Rs {(totalBill - discountAmount).toFixed(2)}
-                  </p>
-                </div>
-                <Separator className="my-2" />
-                <div className="flex justify-between">
-                  <p>Cash:</p>
-                  <p>Rs {cashAmount.toFixed(2)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p>Change:</p>
-                  <p>Rs {cashAmount ? changeAmount.toFixed(2) : "0.00"}</p>
-                </div>
+                {cart.length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <p className="text-muted-foreground">
+                      No items in the cart
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col items-center">
-              <span className="text-center text-sm text-muted-foreground mb-4">
-                Thank you for your visit!
-                <br />
-                Have a nice day!
-              </span>
-            </CardFooter>
           </ScrollArea>
+          <Separator className="" />
+          <div className="space-y-2 p-2">
+            <div className="flex justify-between">
+              <p>Subtotal:</p>
+              <p>Rs {totalBill.toFixed(2)}</p>
+            </div>
+            <div className="flex justify-between">
+              <p>Discount:</p>
+              <p>{discount}%</p>
+            </div>
+            <div className="flex justify-between">
+              <p>Total:</p>
+              <p className="font-bold">
+                Rs {(totalBill - discountAmount).toFixed(2)}
+              </p>
+            </div>
+            <Separator className="my-2" />
+            <div className="flex justify-between">
+              <p>Cash:</p>
+              <p>Rs {cashAmount.toFixed(2)}</p>
+            </div>
+            <div className="flex justify-between">
+              <p>Change:</p>
+              <p>Rs {cashAmount ? changeAmount.toFixed(2) : "0.00"}</p>
+            </div>
+          </div>
           <div className="p-2 space-y-2">
-            <Button
-              className="w-full hover:bg-primary/90 transition-colors"
-              onClick={() =>
-                printBill({
-                  date: date,
-                  time: time,
-                  totalBill: parseFloat(
-                    (totalBill - discountAmount).toFixed(2)
-                  ),
-                  subTotal: totalBill,
-                  cashAmount: cashAmount,
-                  changeAmount: changeAmount,
-                  discount: discount,
-                  cart: cart,
-                })
-              }
-            >
-              <Printer className="mr-2 h-4 w-4" /> Print Bill (P)
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild ref={alertDialogRef}>
+                <Button className="w-full hover:bg-primary/90 transition-colors">
+                  <Printer className="mr-2 h-4 w-4" /> Print Bill (P)
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will clear the cart and
+                    close the menu.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      printBill({
+                        date: date,
+                        time: time,
+                        totalBill: parseFloat(
+                          (totalBill - discountAmount).toFixed(2)
+                        ),
+                        subTotal: totalBill,
+                        cashAmount: cashAmount,
+                        changeAmount: changeAmount,
+                        discount: discount,
+                        cart: cart,
+                      });
+                    }}
+                    ref={printRef}
+                  >
+                    Print Bill  (Space)
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button
               variant="destructive"
               className="w-full hover:bg-destructive/90 transition-colors"

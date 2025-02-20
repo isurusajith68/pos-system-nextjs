@@ -2,6 +2,7 @@
 
 import { connectToDatabase } from "@/lib/mongodb";
 import { endOfDay, startOfDay, sub } from "date-fns";
+import { ObjectId } from "mongodb";
 
 export const addBill = async (bill: {
   totalBill: number;
@@ -81,6 +82,8 @@ export const getBills = async () => {
       discount: bill.discount,
       cart: bill.cart,
       createdAt: bill.createdAt.toISOString(),
+      refunded: bill.refunded,
+      refundedAt: bill.refundedAt?.toISOString(),
     }));
 
     return { success: true, bills: serializableBills };
@@ -166,5 +169,36 @@ export const getDailySales = async () => {
   } catch (error) {
     console.error("Error fetching daily sales:", error);
     return [];
+  }
+};
+
+export const refundBillAction = async (billId: string) => {
+  console.log("Refunding bill:", billId);
+  try {
+    const db = await connectToDatabase();
+    const billsCollection = db.collection("bills");
+
+    const billData = await billsCollection.findOne({
+      _id: new ObjectId(billId),
+    });
+
+    console.log("Bill data:", billData);
+
+    if (!billData) {
+      return { success: false, error: "Bill not found" };
+    }
+
+    const refundedBill = {
+      ...billData,
+      refunded: true,
+      refundedAt: new Date(),
+    };
+
+    await billsCollection.updateOne({ _id: billData._id }, { $set: refundedBill });
+
+    return { success: true, message: "Bill refunded successfully" };
+  } catch (error) {
+    console.error("Error refunding bill:", error);
+    return { success: false, error: "Failed to refund bill" };
   }
 };

@@ -19,21 +19,28 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CalendarIcon, ClockIcon, Eye, Search } from "lucide-react";
-import { getBillStats } from "@/services/bill";
+import { getBillStats, refundBillAction } from "@/services/bill";
 import { useBillStore } from "@/store/useBillStore";
 import { Popover } from "@radix-ui/react-popover";
 import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, formatDate } from "date-fns";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { RiResetRightLine } from "react-icons/ri";
+import { RiRefundFill, RiResetRightLine } from "react-icons/ri";
+import { useToast } from "@/hooks/use-toast";
 
 const BillHistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,6 +48,7 @@ const BillHistoryPage = () => {
   const [endDate, setEndDate] = useState<string>("");
   const { fetchBills, billHistory } = useBillStore();
   const [spinning, setSpinning] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchBills();
@@ -68,6 +76,82 @@ const BillHistoryPage = () => {
     }, 200);
   };
 
+  const printBill = async (data: {
+    totalBill: number;
+    subTotal: number;
+    discountAmount: number;
+    changeAmount: number;
+    cashAmount: number;
+    date: string;
+    time: string;
+    cart: { name: string; quantity: number; price: number }[];
+    billNo: string;
+  }) => {
+    const bill = {
+      totalBill: data.totalBill,
+      subTotal: data.subTotal,
+      discountAmount: data.discountAmount,
+      changeAmount: data.changeAmount,
+      cashAmount: data.cashAmount,
+      date: data.date,
+      time: data.time,
+      cart: data.cart,
+      billNo: data.billNo,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/print", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bill),
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast({
+          title: "Bill Printed",
+          description: "Bill has been printed successfully.",
+          className: "bg-green-500 border-green-500 text-white",
+        });
+      }
+    } catch (error) {
+      console.error("Print error:", error);
+      toast({
+        title: "Print Error",
+        description: "An error occurred while printing the bill.",
+        className: "bg-red-500 border-red-500 text-white",
+      });
+    }
+  };
+
+  const refundBill = async (billId: string) => {
+    try {
+      const result = await refundBillAction(billId);
+      console.log("Refund result:", result);
+
+      if (result.success) {
+        fetchBills();
+        toast({
+          title: "Bill Refunded",
+          description: "Bill has been refunded successfully.",
+          className: "bg-green-500 border-green-500 text-white",
+        });
+      } else {
+        toast({
+          title: "Refund Error",
+          description: result.message,
+          className: "bg-red-500 border-red-500 text-white",
+        });
+      }
+    } catch (error) {
+      console.error("Refund error:", error);
+      toast({
+        title: "Refund Error",
+        description: "An error occurred while refunding the bill.",
+        className: "bg-red-500 border-red-500 text-white",
+      });
+    }
+  };
+
   const getBillStats = (bills: (typeof billHistory)[0][]) => {
     const totalSales = filteredBills.reduce((acc, bill) => acc + bill.total, 0);
     return { totalSales };
@@ -77,6 +161,14 @@ const BillHistoryPage = () => {
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="border-b">
         <CardTitle className="text-2xl font-bold">Bill Details</CardTitle>
+        {bill.refunded && (
+          <div className="flex items-center space-x-2">
+            <span className="text-red-500 text-xs">
+              This bill has been refunded. Refunded at{" "}
+              {formatDate(bill.refundedAt, "PPpp")}
+            </span>
+          </div>
+        )}
         <div className="flex justify-between items-center text-muted-foreground">
           <div className="flex items-center">
             <CalendarIcon className="w-4 h-4 mr-2" />
@@ -134,6 +226,38 @@ const BillHistoryPage = () => {
           </div>
         </div>
       </CardContent>
+      <CardFooter>
+        <div className="flex justify-end items-center">
+          <Button
+            variant="outline"
+            className="mr-2"
+            onClick={() =>
+              printBill({
+                totalBill: bill.total,
+                subTotal: bill.subTotal,
+                discountAmount: bill.discount,
+                changeAmount: bill.change,
+                cashAmount: bill.cash,
+                date: bill.date,
+                time: bill.time,
+                cart: bill.cart,
+                billNo: bill.billNumber,
+              })
+            }
+            disabled={bill.refunded}
+          >
+            Print Bill
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => refundBill(bill.id)}
+            className="bg-destructive text-destructive-foreground"
+            disabled={bill.refunded}
+          >
+            Refund Bill
+          </Button>
+        </div>
+      </CardFooter>
     </Card>
   );
 
@@ -292,7 +416,12 @@ const BillHistoryPage = () => {
               </TableHeader>
               <TableBody>
                 {filteredBills.map((bill) => (
-                  <TableRow key={bill.id}>
+                  <TableRow
+                    key={bill.id}
+                    className={
+                      bill.refunded ? "bg-red-500 hover:bg-red-500" : ""
+                    }
+                  >
                     <TableCell className="font-medium">
                       {bill.billNumber}
                     </TableCell>
@@ -301,16 +430,37 @@ const BillHistoryPage = () => {
                     <TableCell>Rs {bill.total.toFixed(2)}</TableCell>
                     <TableCell>Rs {bill.cash.toFixed(2)}</TableCell>
                     <TableCell>Rs {bill.change.toFixed(2)}</TableCell>
-                    <TableCell>
+                    <TableCell className="flex justify-center items-center">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="hover:bg-secondary"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-2">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="hover:bg-secondary"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="right"
+                                  align="center"
+                                  sideOffset={16}
+                                >
+                                  <p>
+                                    <span className="font-medium">
+                                      View Bill
+                                    </span>
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
                           <DialogHeader>
