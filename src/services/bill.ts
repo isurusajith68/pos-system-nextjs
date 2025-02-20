@@ -96,10 +96,13 @@ export const getBills = async () => {
 export const getBillStats = async () => {
   try {
     const db = await connectToDatabase();
-    
+
     const today = new Date();
-    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
-    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
+    const todayInColombo = new Date(
+      today.toLocaleString("en-US", { timeZone: "Asia/Colombo" })
+    );
+    const startOfToday = new Date(todayInColombo.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(todayInColombo.setHours(23, 59, 59, 999));
 
     const billsCollection = db.collection("bills");
     const totalSales = await billsCollection.countDocuments({
@@ -152,8 +155,11 @@ export const getDailySales = async () => {
     const billsCollection = db.collection("bills");
 
     const today = new Date();
-    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
-    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
+    const todayInColombo = new Date(
+      today.toLocaleString("en-US", { timeZone: "Asia/Colombo" })
+    );
+    const startOfToday = new Date(todayInColombo.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(todayInColombo.setHours(23, 59, 59, 999));
 
     const dailySales = await billsCollection
       .aggregate([
@@ -236,8 +242,12 @@ export const salesDataMonthly = async () => {
     const billsCollection = db.collection("bills");
 
     const today = new Date();
-    const startOfMonth = new Date(today.setDate(1));
-    const endOfMonth = new Date(today.setDate(1));
+    const todayInColombo = new Date(
+      today.toLocaleString("en-US", { timeZone: "Asia/Colombo" })
+    );
+
+    const startOfMonth = new Date(todayInColombo.setDate(1));
+    const endOfMonth = new Date(todayInColombo.setDate(1));
 
     const monthlySales = await billsCollection
       .aggregate([
@@ -272,12 +282,17 @@ export const salesDataWeekly = async () => {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
 
-    const today = new Date();
+     const today = new Date();
+     const todayInColombo = new Date(
+       today.toLocaleString("en-US", { timeZone: "Asia/Colombo" })
+     );
     const startOfWeek = new Date(
-      today.setDate(today.getDate() - today.getDay())
+      todayInColombo.setDate(todayInColombo.getDate() - todayInColombo.getDay())
     );
     const endOfWeek = new Date(
-      today.setDate(today.getDate() - today.getDay() + 6)
+      todayInColombo.setDate(
+        todayInColombo.getDate() - todayInColombo.getDay() + 6
+      )
     );
     console.log(startOfWeek, endOfWeek);
     const weeklySales = await billsCollection
