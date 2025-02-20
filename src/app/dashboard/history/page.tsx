@@ -25,7 +25,6 @@ import { getBillStats } from "@/services/bill";
 import { useBillStore } from "@/store/useBillStore";
 import { Popover } from "@radix-ui/react-popover";
 import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
@@ -179,49 +178,32 @@ const BillHistoryPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label>Start Date</label>
-                  <Calendar
-                    mode="single"
-                    selected={startDate ? new Date(startDate) : null}
-                    onSelect={(date) =>
-                      setStartDate(date ? date.toISOString() : "")
-                    }
-                    initialFocus
-                    
-                  />
                 </div>
                 <div>
                   <label>End Date</label>
-                  <Calendar
-                    mode="single"
-                    selected={endDate ? new Date(endDate) : null}
-                    onSelect={(date) =>
-                      setEndDate(date ? date.toISOString() : "")
-                    }
-                    initialFocus
-                  />
                 </div>
               </div>
             </PopoverContent>
           </Popover>
-        <div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="bg-primary p-1 rounded-full text-secondary">
-                  <RiResetRightLine
-                    onClick={handleReset}
-                    className={`h-6 w-6 cursor-pointer ${
-                      spinning ? "animate-spin" : ""
-                    }`}
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" align="center" sideOffset={16}>
-                <p>Reset</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+          <div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="bg-primary p-1 rounded-full text-secondary">
+                    <RiResetRightLine
+                      onClick={handleReset}
+                      className={`h-6 w-6 cursor-pointer ${
+                        spinning ? "animate-spin" : ""
+                      }`}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center" sideOffset={16}>
+                  <p>Reset</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
       </div>
 
