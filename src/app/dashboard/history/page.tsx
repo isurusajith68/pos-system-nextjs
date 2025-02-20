@@ -26,13 +26,34 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CalendarIcon, ClockIcon, Eye, Search } from "lucide-react";
+import {
+  CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  ClockIcon,
+  Eye,
+  Search,
+} from "lucide-react";
 import { getBillStats, refundBillAction } from "@/services/bill";
 import { useBillStore } from "@/store/useBillStore";
 import { Popover } from "@radix-ui/react-popover";
 import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format, formatDate } from "date-fns";
+import {
+  format,
+  formatDate,
+  startOfMonth,
+  endOfMonth,
+  subMonths,
+  addMonths,
+} from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
@@ -42,10 +63,14 @@ import {
 import { RiRefundFill, RiResetRightLine } from "react-icons/ri";
 import { useToast } from "@/hooks/use-toast";
 
+const ITEMS_PER_PAGE = 10;
+
 const BillHistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentPage, setCurrentPage] = useState(1);
   const { fetchBills, billHistory } = useBillStore();
   const [spinning, setSpinning] = useState(false);
   const { toast } = useToast();
@@ -55,16 +80,38 @@ const BillHistoryPage = () => {
   }, []);
 
   const filteredBills = billHistory.filter((bill) => {
+    const billDate = new Date(bill.date);
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+
     const isSearchMatch =
       bill.billNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       bill.date.includes(searchTerm);
+
+    const isMonthMatch = billDate >= monthStart && billDate <= monthEnd;
 
     const isDateMatch =
       (!startDate || new Date(bill.date) >= new Date(startDate)) &&
       (!endDate || new Date(bill.date) <= new Date(endDate));
 
-    return isSearchMatch && isDateMatch;
+    return isSearchMatch && (startDate && endDate ? isDateMatch : isMonthMatch);
   });
+
+  const totalPages = Math.ceil(filteredBills.length / ITEMS_PER_PAGE);
+  const paginatedBills = filteredBills.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePreviousMonth = () => {
+    setCurrentMonth(subMonths(currentMonth, 1));
+    setCurrentPage(1);
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(addMonths(currentMonth, 1));
+    setCurrentPage(1);
+  };
 
   const handleReset = () => {
     setSpinning(true);
@@ -72,6 +119,8 @@ const BillHistoryPage = () => {
       setStartDate("");
       setEndDate("");
       setSearchTerm("");
+      setCurrentMonth(new Date());
+      setCurrentPage(1);
       setSpinning(false);
     }, 200);
   };
@@ -282,37 +331,20 @@ const BillHistoryPage = () => {
         </div>
 
         <div className="flex space-x-4">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !startDate && !endDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2" />
-                {startDate && endDate ? (
-                  `From ${format(new Date(startDate), "PPP")} to ${format(
-                    new Date(endDate),
-                    "PPP"
-                  )}`
-                ) : (
-                  <span>Select Date Range</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label>Start Date</label>
-                </div>
-                <div>
-                  <label>End Date</label>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="min-w-[150px] text-center">
+              {format(currentMonth, "MMMM yyyy")}
+            </div>
+            <Button variant="outline" size="icon" onClick={handleNextMonth}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          
+
           <div>
             <TooltipProvider>
               <Tooltip>
@@ -336,7 +368,7 @@ const BillHistoryPage = () => {
       </div>
 
       <div className="block md:hidden space-y-4">
-        {filteredBills.map((bill) => (
+        {paginatedBills.map((bill) => (
           <Card key={bill.id} className="w-full">
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
@@ -379,6 +411,31 @@ const BillHistoryPage = () => {
             </CardContent>
           </Card>
         ))}
+
+        {/* Mobile Pagination */}
+        <div className="flex justify-center items-center space-x-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+            }
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="hidden md:block">
@@ -393,11 +450,10 @@ const BillHistoryPage = () => {
                   <TableCell colSpan={7}>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">
-                        Showing {filteredBills.length} of {billHistory.length}{" "}
-                        bills
+                        Showing {paginatedBills.length} of{" "}
+                        {filteredBills.length} bills
                       </span>
                       <div className="flex items-center space-x-2">
-                        {/**total sales price*/}
                         <span className="text-muted-foreground">
                           Total Sales: Rs{" "}
                           {getBillStats(billHistory).totalSales.toFixed(2)}
@@ -419,7 +475,7 @@ const BillHistoryPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBills.map((bill) => (
+                {paginatedBills.map((bill) => (
                   <TableRow
                     key={bill.id}
                     className={
@@ -485,6 +541,33 @@ const BillHistoryPage = () => {
                 ))}
               </TableBody>
             </Table>
+
+            {/* Desktop Pagination */}
+            <div className="flex justify-center items-center space-x-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous
+              </Button>
+              <span className="text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
