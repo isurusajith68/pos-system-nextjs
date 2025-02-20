@@ -3,7 +3,7 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { endOfDay, startOfDay, sub } from "date-fns";
 import { ObjectId } from "mongodb";
-
+import { DateTime } from "luxon";
 export const addBill = async (bill: {
   totalBill: number;
   subTotal: number;
@@ -97,12 +97,10 @@ export const getBillStats = async () => {
   try {
     const db = await connectToDatabase();
 
-    const today = new Date();
-    const todayInColombo = new Date(
-      today.toLocaleString("en-US", { timeZone: "Asia/Colombo" })
-    );
-    const startOfToday = new Date(todayInColombo.setHours(0, 0, 0, 0));
-    const endOfToday = new Date(todayInColombo.setHours(23, 59, 59, 999));
+    const todayInColombo = DateTime.now().setZone("Asia/Colombo");
+
+    const startOfToday = todayInColombo.startOf("day").toISO();
+    const endOfToday = todayInColombo.endOf("day").toISO();
 
     const billsCollection = db.collection("bills");
     const totalSales = await billsCollection.countDocuments({
@@ -154,12 +152,10 @@ export const getDailySales = async () => {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
 
-    const today = new Date();
-    const todayInColombo = new Date(
-      today.toLocaleString("en-US", { timeZone: "Asia/Colombo" })
-    );
-    const startOfToday = new Date(todayInColombo.setHours(0, 0, 0, 0));
-    const endOfToday = new Date(todayInColombo.setHours(23, 59, 59, 999));
+    const todayInColombo = DateTime.now().setZone("Asia/Colombo");
+
+    const startOfToday = todayInColombo.startOf("day").toISO();
+    const endOfToday = todayInColombo.endOf("day").toISO();
 
     const dailySales = await billsCollection
       .aggregate([
@@ -241,13 +237,10 @@ export const salesDataMonthly = async () => {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
 
-    const today = new Date();
-    const todayInColombo = new Date(
-      today.toLocaleString("en-US", { timeZone: "Asia/Colombo" })
-    );
+    const todayInColombo = DateTime.now().setZone("Asia/Colombo");
 
-    const startOfMonth = new Date(todayInColombo.setDate(1));
-    const endOfMonth = new Date(todayInColombo.setDate(1));
+    const startOfMonth = new Date(todayInColombo.startOf("month").toISO());
+    const endOfMonth = new Date(todayInColombo.endOf("month").toISO());
 
     const monthlySales = await billsCollection
       .aggregate([
@@ -282,19 +275,11 @@ export const salesDataWeekly = async () => {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
 
-     const today = new Date();
-     const todayInColombo = new Date(
-       today.toLocaleString("en-US", { timeZone: "Asia/Colombo" })
-     );
-    const startOfWeek = new Date(
-      todayInColombo.setDate(todayInColombo.getDate() - todayInColombo.getDay())
-    );
-    const endOfWeek = new Date(
-      todayInColombo.setDate(
-        todayInColombo.getDate() - todayInColombo.getDay() + 6
-      )
-    );
-    console.log(startOfWeek, endOfWeek);
+    const todayInColombo = DateTime.now().setZone("Asia/Colombo");
+
+    const startOfWeek = new Date(todayInColombo.startOf("week").toISO());
+
+    const endOfWeek = new Date(todayInColombo.endOf("week").toISO());
     const weeklySales = await billsCollection
       .aggregate([
         {
