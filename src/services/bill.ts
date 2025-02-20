@@ -3,7 +3,7 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { endOfDay, startOfDay, sub } from "date-fns";
 import { ObjectId } from "mongodb";
-import { DateTime } from "luxon";
+
 export const addBill = async (bill: {
   totalBill: number;
   subTotal: number;
@@ -96,11 +96,9 @@ export const getBills = async () => {
 export const getBillStats = async () => {
   try {
     const db = await connectToDatabase();
-
-    const todayInColombo = DateTime.now().setZone("Asia/Colombo");
-
-    const startOfToday = todayInColombo.startOf("day").toISO();
-    const endOfToday = todayInColombo.endOf("day").toISO();
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
 
     const billsCollection = db.collection("bills");
     const totalSales = await billsCollection.countDocuments({
@@ -152,10 +150,9 @@ export const getDailySales = async () => {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
 
-    const todayInColombo = DateTime.now().setZone("Asia/Colombo");
-
-    const startOfToday = todayInColombo.startOf("day").toISO();
-    const endOfToday = todayInColombo.endOf("day").toISO();
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
 
     const dailySales = await billsCollection
       .aggregate([
@@ -237,10 +234,9 @@ export const salesDataMonthly = async () => {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
 
-    const todayInColombo = DateTime.now().setZone("Asia/Colombo");
-
-    const startOfMonth = new Date(todayInColombo.startOf("month").toISO());
-    const endOfMonth = new Date(todayInColombo.endOf("month").toISO());
+    const today = new Date();
+    const startOfMonth = new Date(today.setDate(1));
+    const endOfMonth = new Date(today.setDate(1));
 
     const monthlySales = await billsCollection
       .aggregate([
@@ -275,69 +271,73 @@ export const salesDataWeekly = async () => {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
 
-    const todayInColombo = DateTime.now().setZone("Asia/Colombo");
+    const today = new Date();
+    const startOfWeek = new Date(
+      today.setDate(today.getDate() - today.getDay())
+    );
+    const endOfWeek = new Date(
+      today.setDate(today.getDate() - today.getDay() + 6)
+    );
+    console.log(startOfWeek, endOfWeek);
+   const weeklySales = await billsCollection
+     .aggregate([
+       {
+         $match: {
+           createdAt: { $gte: startOfWeek, $lt: endOfWeek },
+           refunded: { $ne: true },
+         },
+       },
+       {
+         $project: {
+           dayName: {
+             $switch: {
+               branches: [
+                 {
+                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 1] },
+                   then: "Sunday",
+                 },
+                 {
+                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 2] },
+                   then: "Monday",
+                 },
+                 {
+                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 3] },
+                   then: "Tuesday",
+                 },
+                 {
+                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 4] },
+                   then: "Wednesday",
+                 },
+                 {
+                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 5] },
+                   then: "Thursday",
+                 },
+                 {
+                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 6] },
+                   then: "Friday",
+                 },
+                 {
+                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 7] },
+                   then: "Saturday",
+                 },
+               ],
+               default: "Unknown",
+             },
+           },
+           totalBill: 1,
+         },
+       },
+       {
+         $group: {
+           _id: "$dayName",
+           total: { $sum: "$totalBill" },
+           billCount: { $sum: 1 },
+         },
+       },
+       { $sort: { _id: 1 } }, 
+     ])
+     .toArray();
 
-    const startOfWeek = new Date(todayInColombo.startOf("week").toISO());
-
-    const endOfWeek = new Date(todayInColombo.endOf("week").toISO());
-    const weeklySales = await billsCollection
-      .aggregate([
-        {
-          $match: {
-            createdAt: { $gte: startOfWeek, $lt: endOfWeek },
-            refunded: { $ne: true },
-          },
-        },
-        {
-          $project: {
-            dayName: {
-              $switch: {
-                branches: [
-                  {
-                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 1] },
-                    then: "Sunday",
-                  },
-                  {
-                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 2] },
-                    then: "Monday",
-                  },
-                  {
-                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 3] },
-                    then: "Tuesday",
-                  },
-                  {
-                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 4] },
-                    then: "Wednesday",
-                  },
-                  {
-                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 5] },
-                    then: "Thursday",
-                  },
-                  {
-                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 6] },
-                    then: "Friday",
-                  },
-                  {
-                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 7] },
-                    then: "Saturday",
-                  },
-                ],
-                default: "Unknown",
-              },
-            },
-            totalBill: 1,
-          },
-        },
-        {
-          $group: {
-            _id: "$dayName",
-            total: { $sum: "$totalBill" },
-            billCount: { $sum: 1 },
-          },
-        },
-        { $sort: { _id: 1 } },
-      ])
-      .toArray();
 
     return weeklySales;
   } catch (error) {
