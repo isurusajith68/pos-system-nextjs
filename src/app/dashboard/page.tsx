@@ -77,6 +77,14 @@ const DashboardPage = () => {
   } = useStats();
   const { toast } = useToast();
 
+  const colomboTime = new Date().toLocaleString("en-US", {
+    timeZone: "Asia/Colombo",
+  });
+
+  const colomboDate = new Date(colomboTime);
+
+  const colomboISOString = colomboDate.toISOString();
+
   const {
     salesData,
     setSalesData,
@@ -163,7 +171,7 @@ const DashboardPage = () => {
   useEffect(() => {
     setIsLoading(true);
 
-    Promise.all([getBillStats(), getCash({ date: new Date().toISOString() })])
+    Promise.all([getBillStats(), getCash({ date: colomboISOString })])
       .then(([billStats, cashData]) => {
         if (billStats.success) {
           setTotalRevenue(billStats.totalRevenue);

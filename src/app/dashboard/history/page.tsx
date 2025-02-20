@@ -86,6 +86,7 @@ const BillHistoryPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { fetchBills, billHistory } = useBillStore();
   const [spinning, setSpinning] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -106,6 +107,15 @@ const BillHistoryPage = () => {
     const isDateMatch =
       (!startDate || new Date(bill.date) >= new Date(startDate)) &&
       (!endDate || new Date(bill.date) <= new Date(endDate));
+    if (selectedDate) {
+      const selectedDateObj = new Date(selectedDate);
+      const billDateObj = new Date(bill.date);
+      return (
+        billDateObj.getDate() === selectedDateObj.getDate() &&
+        billDateObj.getMonth() === selectedDateObj.getMonth() &&
+        billDateObj.getFullYear() === selectedDateObj.getFullYear()
+      );
+    }
 
     return isSearchMatch && (startDate && endDate ? isDateMatch : isMonthMatch);
   });
@@ -355,7 +365,14 @@ const BillHistoryPage = () => {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-
+          <div className="flex items-center space-x-2">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="border border-gray-300 rounded-md px-2 py-1"
+            />
+          </div>
           <div>
             <TooltipProvider>
               <Tooltip>
