@@ -96,17 +96,10 @@ export const getBills = async () => {
 export const getBillStats = async () => {
   try {
     const db = await connectToDatabase();
-    const today = new Date().toLocaleString("en-US", {
-      timeZone: "Asia/Colombo",
-    });
-
-    const colomboDate = new Date(today);
-
-    const startOfToday = new Date(colomboDate);
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const endOfToday = new Date(colomboDate);
-    endOfToday.setHours(23, 59, 59, 999);
+    
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
 
     const billsCollection = db.collection("bills");
     const totalSales = await billsCollection.countDocuments({
@@ -158,17 +151,9 @@ export const getDailySales = async () => {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
 
-    const today = new Date().toLocaleString("en-US", {
-      timeZone: "Asia/Colombo",
-    });
-
-    const colomboDate = new Date(today);
-
-    const startOfToday = new Date(colomboDate);
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const endOfToday = new Date(colomboDate);
-    endOfToday.setHours(23, 59, 59, 999);
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
 
     const dailySales = await billsCollection
       .aggregate([
@@ -250,28 +235,9 @@ export const salesDataMonthly = async () => {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
 
-    const today = new Date().toLocaleString("en-US", {
-      timeZone: "Asia/Colombo",
-    });
-
-    const colomboDate = new Date(today);
-
-    const startOfToday = new Date(colomboDate);
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const endOfToday = new Date(colomboDate);
-    endOfToday.setHours(23, 59, 59, 999);
-
-    const startOfMonth = new Date(
-      startOfToday.getFullYear(),
-      startOfToday.getMonth(),
-      1
-    );
-    const endOfMonth = new Date(
-      startOfToday.getFullYear(),
-      startOfToday.getMonth() + 1,
-      0
-    );
+    const today = new Date();
+    const startOfMonth = new Date(today.setDate(1));
+    const endOfMonth = new Date(today.setDate(1));
 
     const monthlySales = await billsCollection
       .aggregate([
@@ -305,17 +271,13 @@ export const salesDataWeekly = async () => {
   try {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
-    const today = new Date().toLocaleString("en-US", {
-      timeZone: "Asia/Colombo",
-    });
 
-    const colomboDate = new Date(today);
-
+    const today = new Date();
     const startOfWeek = new Date(
-      colomboDate.setDate(colomboDate.getDate() - colomboDate.getDay())
+      today.setDate(today.getDate() - today.getDay())
     );
     const endOfWeek = new Date(
-      colomboDate.setDate(colomboDate.getDate() - colomboDate.getDay() + 6)
+      today.setDate(today.getDate() - today.getDay() + 6)
     );
     console.log(startOfWeek, endOfWeek);
     const weeklySales = await billsCollection
