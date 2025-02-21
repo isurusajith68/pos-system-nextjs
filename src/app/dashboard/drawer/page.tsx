@@ -65,7 +65,7 @@ function App() {
               </thead>
               <tbody className=" divide-y ">
                 {drawerHistory.map((record, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                  <tr key={index} className="">
                     <td className="px-6 py-4 whitespace-nowrap text-sm ">
                       {record.date}
                     </td>
