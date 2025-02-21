@@ -24,15 +24,13 @@ const UserManagement = () => {
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">
-          Settings
-        </h1>
+        <h1 className="text-xl font-bold">Settings</h1>
         <div className="flex items-center space-x-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback>
+                  <AvatarFallback className="uppercase">
                     {currentUser?.username
                       .split(" ")
                       .map((n) => n[0])

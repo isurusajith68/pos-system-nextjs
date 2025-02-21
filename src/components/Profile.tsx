@@ -22,7 +22,7 @@ export const Profile = ({ currentUser }) => (
     <CardContent className="space-y-6">
       <div className="flex items-center space-x-4">
         <Avatar className="h-20 w-20">
-          <AvatarFallback className="text-lg">
+          <AvatarFallback className="text-lg uppercase">
             {currentUser?.username
               .split(" ")
               .map((n) => n[0])

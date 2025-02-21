@@ -135,12 +135,11 @@ export default function Navbar() {
             </span>
           </div>
           <Avatar className="sm:w-8 sm:h-8 h-6 w-6">
-            <AvatarImage
-              src="https://github.com/shadcn.png"
-              alt="User avatar"
-            />
-            <AvatarFallback>
-              {user?.username.slice(0, 1).toUpperCase()}
+            <AvatarFallback className="uppercase">
+              {user?.username
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
             </AvatarFallback>
           </Avatar>
         </div>

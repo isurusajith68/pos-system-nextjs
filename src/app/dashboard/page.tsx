@@ -415,6 +415,7 @@ const DashboardPage = () => {
                           placeholder="Enter declared cash"
                           value={declaredCash}
                           onChange={(e) => setDeclaredCash(e.target.value)}
+                          readOnly={isDayEnded}
                         />
                         <p className="text-xs text-muted-foreground">
                           The cash amount that you are declaring for the day,
