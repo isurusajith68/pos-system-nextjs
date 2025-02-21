@@ -6,7 +6,11 @@ import { ObjectId as MongoObjectId } from "mongodb";
 
 export const getProducts = async () => {
   const db = await connectToDatabase();
-  const products = await db.collection("products").find().toArray();
+  const products = await db
+    .collection("products")
+    .find()
+    .sort({ name: 1 })
+    .toArray();
 
   return products.map((product) => ({
     ...product,
@@ -16,6 +20,7 @@ export const getProducts = async () => {
 
 export const addProduct = async (
   name: string,
+  itemCode: string,
   price: string,
   category: string,
   stock: string,
@@ -30,17 +35,21 @@ export const addProduct = async (
 
   await db.collection("products").insertOne({
     name,
+    itemCode,
     price,
     category,
     stock,
     image,
+    createdAt: new Date().toISOString(),
   });
+
   return { status: true, message: "Product added successfully" };
 };
 
 export const updateProduct = async (
   id: string,
   name: string,
+  itemCode: string,
   price: string,
   category: string,
   stock: string,
@@ -52,6 +61,7 @@ export const updateProduct = async (
     {
       $set: {
         name,
+        itemCode,
         price,
         category,
         stock: Number(stock),

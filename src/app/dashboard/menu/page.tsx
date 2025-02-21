@@ -146,10 +146,11 @@ const MenuPage = () => {
   }, []);
 
   const filteredProductsByCategoryAndSearch = products.filter((product) => {
-    return selectedCategory
-      ? product.category === selectedCategory &&
-          product.name.toLowerCase().includes(searchTerm.toLowerCase())
-      : true && product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return (
+      ((!selectedCategory || product.category === selectedCategory) &&
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      product.itemCode.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   });
 
   const addToCart = (product: { id: string; name: string; price: number }) => {
@@ -480,7 +481,7 @@ const MenuPage = () => {
                 <div className="flex items-center gap-4">
                   <Input
                     type="text"
-                    placeholder="Search for items (S)"
+                    placeholder="Search item code or name (S)"
                     className="w-64 mt-2 max-sm:w-full focus-visible:ring-2"
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
@@ -615,7 +616,10 @@ const MenuPage = () => {
                           </div>
                           <CardContent className="p-4">
                             <h3 className="font-semibold text-lg mb-1 capitalize">
-                              {product.name}
+                              {product.name}{" "}
+                              <span className="text-muted-foreground text-xs ml-2">
+                                ({product.itemCode})
+                              </span>
                             </h3>
 
                             <div className="flex justify-between items-center mb-4">
@@ -629,13 +633,9 @@ const MenuPage = () => {
                               </div>
                               <Badge
                                 variant="outline"
-                                className={`${
-                                  product.stock > 10
-                                    ? "text-green-600 border-green-600"
-                                    : "text-orange-600 border-orange-600 "
-                                }`}
+                                className={`${"text-green-600 border-green-600"}`}
                               >
-                                {product.stock} left
+                                {product.stock}
                               </Badge>
                             </div>
                             <Button

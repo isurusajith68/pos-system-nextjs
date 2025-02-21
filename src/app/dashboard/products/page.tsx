@@ -66,13 +66,14 @@ const formSchema = z.object({
   productName: z
     .string()
     .min(2, { message: "Product name must be at least 2 characters." }),
+  itemCode: z
+    .string()
+    .min(2, { message: "Item code must be at least 2 characters." }),
   price: z.string().regex(/^\d+(\.\d{1,2})?$/, {
     message: "Price must be a valid number with up to 2 decimal places.",
   }),
   category: z.string().min(1, { message: "Please select a category." }),
-  stock: z
-    .string()
-    .regex(/^\d+$/, { message: "Stock must be a valid number." }),
+  stock: z.string().optional(),
   productImage:
     typeof window !== "undefined" ? z.instanceof(File).optional() : z.any(),
 });
@@ -102,6 +103,7 @@ export default function ProductManagement() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       productName: "",
+      itemCode: "",
       price: "",
       category: "",
       stock: "",
@@ -155,10 +157,11 @@ export default function ProductManagement() {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const { productName, price, category, stock } = values;
+    const { productName, price, category, stock, itemCode } = values;
 
     const newProduct = {
       name: productName,
+      itemCode,
       price,
       category,
       stock,
@@ -187,6 +190,7 @@ export default function ProductManagement() {
         const updateResult = await updateProduct(
           editingProduct._id,
           newProduct.name,
+          newProduct.itemCode,
           newProduct.price,
           newProduct.category,
           newProduct.stock,
@@ -229,6 +233,7 @@ export default function ProductManagement() {
 
         const result = await addProduct(
           newProduct.name,
+          newProduct.itemCode,
           newProduct.price,
           newProduct.category,
           newProduct.stock,
@@ -295,6 +300,7 @@ export default function ProductManagement() {
   const handleEdit = (product: {
     _id: string;
     name: string;
+    itemCode: string;
     price: number;
     category: string;
     stock: number;
@@ -306,6 +312,7 @@ export default function ProductManagement() {
       stock: parseInt(product.stock.toString(), 10),
     });
     form.setValue("productName", product.name);
+    form.setValue("itemCode", product.itemCode);
     form.setValue("price", product.price.toString());
     form.setValue("category", product.category);
     form.setValue("stock", product.stock.toString());
@@ -388,7 +395,10 @@ export default function ProductManagement() {
   );
 
   return (
-    <div className="container mx-auto py-5 sm:px-4 scroll-area" id="scroll-area">
+    <div
+      className="container mx-auto py-5 sm:px-4 scroll-area"
+      id="scroll-area"
+    >
       <h1 className="text-xl font-bold text-primary mb-6">Products</h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="">
@@ -433,6 +443,20 @@ export default function ProductManagement() {
                         <FormLabel>Product Name</FormLabel>
                         <FormControl>
                           <Input placeholder="Enter product name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="itemCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Item Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter product stock" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -493,7 +517,9 @@ export default function ProductManagement() {
                     name="stock"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Stock</FormLabel>
+                        <FormLabel>
+                          Stock <span className="text-sm">(Optional)</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             placeholder="Enter stock quantity"
@@ -609,9 +635,9 @@ export default function ProductManagement() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Product Name</TableHead>
+                          <TableHead>Item Code</TableHead>
                           <TableHead>Price</TableHead>
                           <TableHead>Category</TableHead>
-                          <TableHead>Stock</TableHead>
                           <TableHead>Image</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -623,13 +649,15 @@ export default function ProductManagement() {
                               {product.name}
                             </TableCell>
                             <TableCell>
+                              {!product.itemCode ? "-" : product.itemCode}
+                            </TableCell>
+                            <TableCell>
                               Rs{" "}
                               {parseFloat(product.price.toString()).toFixed(2)}
                             </TableCell>
                             <TableCell className="capitalize">
                               {product.category}
                             </TableCell>
-                            <TableCell>{product.stock}</TableCell>
                             <TableCell>
                               {product.image && (
                                 <Image

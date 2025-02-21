@@ -24,6 +24,7 @@ interface ProductStore {
   products: {
     _id: string;
     name: string;
+    itemCode: string;
     price: number;
     category: string;
     stock: number;
@@ -34,6 +35,7 @@ interface ProductStore {
     products: {
       _id: string;
       name: string;
+      itemCode: string;
       price: number;
       category: string;
       stock: number;
@@ -46,6 +48,7 @@ interface ProductStore {
   editingProduct: {
     _id: string;
     name: string;
+    itemCode: string;
     price: number;
     category: string;
     stock: number;
@@ -55,6 +58,7 @@ interface ProductStore {
     product: {
       _id: string;
       name: string;
+      itemCode: string;
       price: number;
       category: string;
       stock: number;
