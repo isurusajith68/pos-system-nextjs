@@ -100,7 +100,7 @@ const DashboardPage = () => {
     const ex = totalRevenue + Number(startingCash);
     setExpectedCash(ex);
 
-    const calculatedVariance = expectedCash - Number(declaredCash);
+    const calculatedVariance = Number(declaredCash) - ex;
     setVariance(calculatedVariance);
   }, [expectedCash, declaredCash, startingCash, totalRevenue]);
 
@@ -450,7 +450,11 @@ const DashboardPage = () => {
                       {isDayEnded && (
                         <Alert className="bg-green-50 border-green-200">
                           <AlertCircle className="h-4 w-4 text-green-600" />
-                          <AlertDescription className="text-green-600">
+                          <AlertDescription
+                            className={
+                              variance < 0 ? "text-red-600" : "text-green-600"
+                            }
+                          >
                             Day has been ended successfully. Final variance: Rs{" "}
                             {variance}
                           </AlertDescription>

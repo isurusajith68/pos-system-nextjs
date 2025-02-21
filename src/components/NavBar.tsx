@@ -9,10 +9,11 @@ import { IoReload, IoReloadCircle } from "react-icons/io5";
 import { set } from "date-fns";
 import { Printer } from "lucide-react";
 import Image from "next/image";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Navbar() {
   const [darkMode, setDarkMode] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, setUser } = useAuthStore();
   const [printerOnline, setPrinterOnline] = useState(false);
   const [count, setCount] = useState(0);
   const [spin, setSpin] = useState(false);
@@ -127,7 +128,7 @@ export default function Navbar() {
         <div className="flex items-center cursor-pointer border-l border-border sm:pl-4 gap-4">
           <div className="flex flex-col items-end  ml-2 ">
             <span className="ml-2  font-semibold text-foreground text-xs sm:text-base">
-              {user?.name}
+              {user?.username}
             </span>
             <span className="ml-2 font-thin sm:text-xs text-[0.6rem]">
               {user?.role}
@@ -139,7 +140,7 @@ export default function Navbar() {
               alt="User avatar"
             />
             <AvatarFallback>
-              {user?.name.slice(0, 1).toUpperCase()}
+              {user?.username.slice(0, 1).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </div>

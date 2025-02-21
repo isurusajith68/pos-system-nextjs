@@ -89,8 +89,13 @@ export const updateCash = async ({
 
 export const getAllCash = async () => {
   const db = await connectToDatabase();
-  const cash = await db.collection("cash").find().toArray();
-  return { success: true, cash };
+  const cash = await db.collection("cash").find().sort({ date: -1 }).toArray();
+
+  if (!cash) {
+    return { success: false, message: "Cash not found" };
+  }
+  const cashData = cash.map(({ _id, ...rest }) => rest);
+  return { success: true, cashData };
 };
 
 export const deleteCash = async ({ date }: { date: string }) => {

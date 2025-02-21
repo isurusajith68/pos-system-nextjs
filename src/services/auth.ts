@@ -5,6 +5,15 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
 import { redirect } from "next/navigation";
+
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  role: "admin" | "manager" | "cashier" | "user";
+  password: string;
+}
+
 export const loginUser = async (email: string, password: string) => {
   try {
     const db = await connectToDatabase();
@@ -79,4 +88,110 @@ export const getUserFromCookie = async () => {
 export const logoutUser = async () => {
   (await cookies()).delete("auth_token");
   redirect("/");
+};
+
+interface UpdateUserData {
+  id?: string;
+  email?: string;
+  username?: string;
+  password?: string;
+  role?: string;
+  updated_at?: string;
+}
+
+export const updateUser = async (userId: string, data: UpdateUserData) => {
+  try {
+    const db = await connectToDatabase();
+    const user = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
+
+    data.updated_at = new Date().toISOString();
+
+    await db
+      .collection("users")
+      .updateOne({ _id: new ObjectId(userId) }, { $set: data });
+
+    return { success: true, message: "User updated successfully" };
+  } catch (error) {
+    return { success: false, message: "Server error, please try again later" };
+  }
+};
+
+export const createUser = async (data: {
+  email: string;
+  username: string;
+  password: string;
+  role: string;
+}) => {
+  try {
+    const db = await connectToDatabase();
+    const user = await db.collection("users").findOne({ email: data.email });
+    if (user) {
+      return { success: false, message: "User already exists" };
+    }
+
+    const createdAt = new Date().toISOString();
+
+    const newData = {
+      ...data,
+      created_at: createdAt,
+      updated_at: createdAt,
+    };
+
+    await db.collection("users").insertOne(newData);
+
+    return { success: true, message: "User created successfully" };
+  } catch (error) {
+    return { success: false, message: "Server error, please try again later" };
+  }
+};
+
+export const deleteUser = async (userId: string) => {
+  try {
+    const db = await connectToDatabase();
+    const user = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
+
+    await db.collection("users").deleteOne({ _id: new ObjectId(userId) });
+
+    return { success: true, message: "User deleted successfully" };
+  } catch (error) {
+    return { success: false, message: "Server error, please try again later" };
+  }
+};
+
+export const getAllUsers = async () => {
+  try {
+    const db = await connectToDatabase();
+    const users = await db
+      .collection("users")
+      .find()
+      .project({ password: 0 })
+      .toArray();
+
+    if (!users) {
+      return { success: false, message: "Users not found" };
+    }
+
+    users.forEach((user) => {
+      user.id = user._id.toString();
+      delete user._id;
+    });
+
+    users.sort((a, b) => {
+      return a.created_at > b.created_at ? -1 : 1;
+    });
+
+    return { success: true, users };
+  } catch (error) {
+    return { success: false, message: "Server error, please try again later" };
+  }
 };
