@@ -523,7 +523,7 @@ const BillHistoryPage = () => {
                   <TableRow
                     key={bill.id}
                     className={
-                      bill.refunded ? "bg-red-500 hover:bg-red-500" : ""
+                      bill.refunded ? "bg-red-500 hover:bg-red-500 text-white" : ""
                     }
                   >
                     <TableCell className="font-medium">
