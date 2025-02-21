@@ -8,6 +8,7 @@ export const addBill = async (bill: {
   totalBill: number;
   subTotal: number;
   discount: number;
+  discountAmount: number;
   changeAmount: number;
   cashAmount: number;
   date: string;
@@ -43,6 +44,7 @@ export const addBill = async (bill: {
       totalBill: bill.totalBill,
       subTotal: bill.subTotal,
       discount: bill.discount,
+      discountAmount: bill.discountAmount,
       changeAmount: bill.changeAmount,
       cashAmount: bill.cashAmount,
       date: bill.date,
@@ -79,13 +81,14 @@ export const getBills = async () => {
       subTotal: bill.subTotal,
       cash: bill.cashAmount,
       change: bill.changeAmount,
+      discountAmount: bill.discountAmount,
       discount: bill.discount,
       cart: bill.cart,
       createdAt: bill.createdAt.toISOString(),
       refunded: bill.refunded,
       refundedAt: bill.refundedAt?.toISOString(),
     }));
-
+    console.log(serializableBills);
     return { success: true, bills: serializableBills };
   } catch (error) {
     console.error("Error fetching bills:", error);
@@ -279,65 +282,64 @@ export const salesDataWeekly = async () => {
       today.setDate(today.getDate() - today.getDay() + 6)
     );
     console.log(startOfWeek, endOfWeek);
-   const weeklySales = await billsCollection
-     .aggregate([
-       {
-         $match: {
-           createdAt: { $gte: startOfWeek, $lt: endOfWeek },
-           refunded: { $ne: true },
-         },
-       },
-       {
-         $project: {
-           dayName: {
-             $switch: {
-               branches: [
-                 {
-                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 1] },
-                   then: "Sunday",
-                 },
-                 {
-                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 2] },
-                   then: "Monday",
-                 },
-                 {
-                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 3] },
-                   then: "Tuesday",
-                 },
-                 {
-                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 4] },
-                   then: "Wednesday",
-                 },
-                 {
-                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 5] },
-                   then: "Thursday",
-                 },
-                 {
-                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 6] },
-                   then: "Friday",
-                 },
-                 {
-                   case: { $eq: [{ $dayOfWeek: "$createdAt" }, 7] },
-                   then: "Saturday",
-                 },
-               ],
-               default: "Unknown",
-             },
-           },
-           totalBill: 1,
-         },
-       },
-       {
-         $group: {
-           _id: "$dayName",
-           total: { $sum: "$totalBill" },
-           billCount: { $sum: 1 },
-         },
-       },
-       { $sort: { _id: 1 } }, 
-     ])
-     .toArray();
-
+    const weeklySales = await billsCollection
+      .aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startOfWeek, $lt: endOfWeek },
+            refunded: { $ne: true },
+          },
+        },
+        {
+          $project: {
+            dayName: {
+              $switch: {
+                branches: [
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 1] },
+                    then: "Sunday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 2] },
+                    then: "Monday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 3] },
+                    then: "Tuesday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 4] },
+                    then: "Wednesday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 5] },
+                    then: "Thursday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 6] },
+                    then: "Friday",
+                  },
+                  {
+                    case: { $eq: [{ $dayOfWeek: "$createdAt" }, 7] },
+                    then: "Saturday",
+                  },
+                ],
+                default: "Unknown",
+              },
+            },
+            totalBill: 1,
+          },
+        },
+        {
+          $group: {
+            _id: "$dayName",
+            total: { $sum: "$totalBill" },
+            billCount: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ])
+      .toArray();
 
     return weeklySales;
   } catch (error) {

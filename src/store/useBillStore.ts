@@ -15,6 +15,7 @@ interface Bill {
   cash: number;
   change: number;
   discount: number;
+  discountAmount: number;
   createdAt: string;
   refundedAt: string;
 }

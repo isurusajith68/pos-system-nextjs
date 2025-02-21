@@ -151,6 +151,7 @@ const BillHistoryPage = () => {
   const printBill = async (data: {
     totalBill: number;
     subTotal: number;
+    discount: number;
     discountAmount: number;
     changeAmount: number;
     cashAmount: number;
@@ -162,6 +163,7 @@ const BillHistoryPage = () => {
     const bill = {
       totalBill: data.totalBill,
       subTotal: data.subTotal,
+      discount: data.discount,
       discountAmount: data.discountAmount,
       changeAmount: data.changeAmount,
       cashAmount: data.cashAmount,
@@ -311,7 +313,8 @@ const BillHistoryPage = () => {
               printBill({
                 totalBill: bill.total,
                 subTotal: bill.subTotal,
-                discountAmount: bill.discount,
+                discount: bill.discount,
+                discountAmount: bill.discountAmount,
                 changeAmount: bill.change,
                 cashAmount: bill.cash,
                 date: bill.date,
@@ -474,12 +477,13 @@ const BillHistoryPage = () => {
             <Table>
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={9}>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">
                         Showing {paginatedBills.length} of{" "}
                         {filteredBills.length} bills
                       </span>
+                      
                       <div className="flex items-center space-x-2">
                         <span className="text-muted-foreground">
                           Total Sales: Rs{" "}
@@ -496,6 +500,8 @@ const BillHistoryPage = () => {
                   <TableHead>Date</TableHead>
                   <TableHead>Time</TableHead>
                   <TableHead>Total</TableHead>
+                  <TableHead>Discount</TableHead>
+                  <TableHead>Discount Amount</TableHead>
                   <TableHead>Cash</TableHead>
                   <TableHead>Change</TableHead>
                   <TableHead className="w-[80px]">Actions</TableHead>
@@ -515,6 +521,12 @@ const BillHistoryPage = () => {
                     <TableCell>{bill.date}</TableCell>
                     <TableCell>{bill.time}</TableCell>
                     <TableCell>Rs {bill.total.toFixed(2)}</TableCell>
+                    <TableCell>{bill.discount} %</TableCell>
+                    <TableCell>
+                      {bill.discountAmount
+                        ? `Rs ${Number(bill.discountAmount).toFixed(2)}`
+                        : "Rs 0.00"}
+                    </TableCell>
                     <TableCell>Rs {bill.cash.toFixed(2)}</TableCell>
                     <TableCell>Rs {bill.change.toFixed(2)}</TableCell>
                     <TableCell className="flex justify-center items-center">

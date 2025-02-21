@@ -358,6 +358,7 @@ const MenuPage = () => {
     totalBill: number;
     subTotal: number;
     discount: number;
+    discountAmount: number;
     changeAmount: number;
     cashAmount: number;
     date: string;
@@ -375,6 +376,7 @@ const MenuPage = () => {
       subTotal,
       changeAmount,
       cashAmount,
+      discountAmount,
       date,
       time,
     } = data;
@@ -401,6 +403,7 @@ const MenuPage = () => {
       totalBill,
       subTotal,
       discount,
+      discountAmount,
       changeAmount,
       cashAmount,
       date,
@@ -426,6 +429,7 @@ const MenuPage = () => {
     const bill = {
       totalBill,
       subTotal,
+      discount,
       discountAmount,
       changeAmount,
       cashAmount,
@@ -812,12 +816,13 @@ const MenuPage = () => {
                         cashAmount: cashAmount,
                         changeAmount: changeAmount,
                         discount: discount,
+                        discountAmount: discountAmount,
                         cart: cart,
                       });
                     }}
                     ref={printRef}
                   >
-                    Print Bill  (Space)
+                    Print Bill (Space)
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
