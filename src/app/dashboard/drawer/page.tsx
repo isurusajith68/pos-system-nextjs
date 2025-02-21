@@ -33,11 +33,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto  py-6 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900">Drawer History</h1>
+      <div className="max-w-8xl mx-auto  py-6 sm:px-6 lg:px-5">
+        <h1 className="text-xl font-bold text-gray-900">Drawer History</h1>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-5 py-8">
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
