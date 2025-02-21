@@ -88,6 +88,14 @@ const BillHistoryPage = () => {
   const [spinning, setSpinning] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const { toast } = useToast();
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("theme") === "dark") {
+      document.documentElement.classList.add("dark");
+      setDarkMode(true);
+    }
+  }, []);
 
   useEffect(() => {
     fetchBills();
@@ -144,6 +152,7 @@ const BillHistoryPage = () => {
       setSearchTerm("");
       setCurrentMonth(new Date());
       setCurrentPage(1);
+      setSelectedDate("");
       setSpinning(false);
     }, 200);
   };
@@ -374,6 +383,9 @@ const BillHistoryPage = () => {
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               className="border border-gray-300 rounded-md px-2 py-1"
+              style={{
+                backgroundColor: darkMode ? "black" : "white",
+              }}
             />
           </div>
           <div>
@@ -483,7 +495,7 @@ const BillHistoryPage = () => {
                         Showing {paginatedBills.length} of{" "}
                         {filteredBills.length} bills
                       </span>
-                      
+
                       <div className="flex items-center space-x-2">
                         <span className="text-muted-foreground">
                           Total Sales: Rs{" "}
@@ -502,8 +514,7 @@ const BillHistoryPage = () => {
                   <TableHead>Total</TableHead>
                   <TableHead>Discount</TableHead>
                   <TableHead>Discount Amount</TableHead>
-                  <TableHead>Cash</TableHead>
-                  <TableHead>Change</TableHead>
+
                   <TableHead className="w-[80px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -527,8 +538,7 @@ const BillHistoryPage = () => {
                         ? `Rs ${Number(bill.discountAmount).toFixed(2)}`
                         : "Rs 0.00"}
                     </TableCell>
-                    <TableCell>Rs {bill.cash.toFixed(2)}</TableCell>
-                    <TableCell>Rs {bill.change.toFixed(2)}</TableCell>
+
                     <TableCell className="flex justify-center items-center">
                       <Dialog>
                         <DialogTrigger asChild>
