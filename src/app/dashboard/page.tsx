@@ -468,7 +468,7 @@ const DashboardPage = () => {
             )}
           </Card>
 
-          <Card>
+          <Card className="max-sm:p-0 p-0">
             {salesDataLoading ? (
               <div className="flex justify-center items-center py-5">
                 <Loader className="h-6 w-6 text-primary animate-spin" />
@@ -480,7 +480,7 @@ const DashboardPage = () => {
                     <CardHeader>
                       <CardTitle>Weekly Sales & Bill Count</CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[350px] sm:h-[400px]">
+                    <CardContent className="h-[350px] sm:h-[400px] p-0">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={sortedSalesData}>
                           <CartesianGrid strokeDasharray="3 3" />
