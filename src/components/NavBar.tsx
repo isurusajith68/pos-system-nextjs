@@ -3,13 +3,22 @@
 import { useState, useEffect } from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { getUserFromCookie } from "@/services/auth";
-import { redirect } from "next/navigation";
+import { getUserFromCookie, logoutUser } from "@/services/auth";
+import { redirect, useRouter } from "next/navigation";
 import { IoReload, IoReloadCircle } from "react-icons/io5";
 import { set } from "date-fns";
-import { Printer } from "lucide-react";
+import { Lock, LogOut, Printer, User } from "lucide-react";
 import Image from "next/image";
 import { useAuthStore } from "@/store/useAuthStore";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
 
 export default function Navbar() {
   const [darkMode, setDarkMode] = useState(false);
@@ -80,6 +89,8 @@ export default function Navbar() {
     fetchPrinterOnline();
   }, [count]);
 
+  const router = useRouter();
+
   return (
     <header className="sm:h-16 h-14 flex justify-between items-center px-6 bg-background pt-2 pl-5 p-1">
       <div className="flex items-center gap-5">
@@ -134,14 +145,47 @@ export default function Navbar() {
               {user?.role}
             </span>
           </div>
-          <Avatar className="sm:w-8 sm:h-8 h-6 w-6">
-            <AvatarFallback className="uppercase">
-              {user?.username
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </AvatarFallback>
-          </Avatar>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="uppercase">
+                    {user?.username
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => router.push("/dashboard/settings")}
+              >
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={() => router.push("/dashboard/settings")}
+              >
+                <Lock className="mr-2 h-4 w-4" />
+                Change Password
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={async () => {
+                  await logoutUser();
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

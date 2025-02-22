@@ -147,9 +147,9 @@ const MenuPage = () => {
 
   const filteredProductsByCategoryAndSearch = products.filter((product) => {
     return (
-      ((!selectedCategory || product.category === selectedCategory) &&
-        product.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      product.itemCode.toLowerCase().includes(searchTerm.toLowerCase())
+      (!selectedCategory || product.category === selectedCategory) &&
+      (product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.itemCode.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
