@@ -353,8 +353,8 @@ const BillHistoryPage = () => {
   );
 
   return (
-    <div className="container mx-auto p-4 max-w-8xl">
-      <h1 className="text-2xl font-bold mb-6 md:text-xl">Bill History</h1>
+    <div className="container mx-auto sm:p-4 max-w-8xl">
+      <h1 className="text-xl font-bold mb-6">Bill History</h1>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="relative w-full sm:w-64">

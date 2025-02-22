@@ -101,7 +101,7 @@ function App() {
 
   return (
     <div className="">
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-4 py-6">
+      <div className="container mx-auto sm:p-4 max-w-8xl">
         <h1 className="text-xl font-bold tracking-tight">Drawer History</h1>
 
         <div className="sm:hidden mt-6">

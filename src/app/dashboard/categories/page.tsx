@@ -239,7 +239,10 @@ export default function CategoryManagement() {
   });
 
   return (
-    <div className="container mx-auto py-5 scroll-area-c" id="scroll-area-c">
+    <div
+      className="container mx-auto sm:p-4 space-y-4 scroll-area-c"
+      id="scroll-area-c"
+    >
       <h1 className="text-xl font-bold text-primary mb-6">Category</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="md:col-span-1">
