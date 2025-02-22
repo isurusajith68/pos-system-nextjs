@@ -170,22 +170,35 @@ export default function ProductManagement() {
 
     try {
       if (editingProduct) {
-        if (!productImage) {
-          toast({
-            title: "Error adding product",
-            description: "Please upload an image for the product",
-            className: "bg-red-500 text-white",
-          });
-          return;
+        let url: string | undefined;
+        if (productImage) {
+          try {
+            const res = await fetch("/api/upload", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ image: productImage }),
+            });
+
+            if (!res.ok) {
+              throw new Error(`Failed to upload image: ${res.statusText}`);
+            }
+
+            const data = await res.json();
+            url = data.url;
+
+            toast({
+              title: "Image uploaded successfully",
+              description: "Image has been uploaded successfully.",
+              className: "bg-green-500 text-white",
+            });
+          } catch (error) {
+            toast({
+              title: "Error uploading image",
+              description: error.message,
+              className: "bg-red-500 text-white",
+            });
+          }
         }
-
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: productImage }),
-        });
-
-        const { url } = await res.json();
 
         const updateResult = await updateProduct(
           editingProduct._id,
@@ -194,7 +207,7 @@ export default function ProductManagement() {
           newProduct.price,
           newProduct.category,
           newProduct.stock,
-          url
+          url || editingProduct.image || null
         );
 
         if (!updateResult.status) {
@@ -214,22 +227,35 @@ export default function ProductManagement() {
           fetchProducts();
         }
       } else {
-        if (!productImage) {
-          toast({
-            title: "Error adding product",
-            description: "Please upload an image for the product",
-            className: "bg-red-500 text-white",
-          });
-          return;
+        let url: string | undefined;
+        if (productImage) {
+          try {
+            const res = await fetch("/api/upload", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ image: productImage }),
+            });
+
+            if (!res.ok) {
+              throw new Error(`Failed to upload image: ${res.statusText}`);
+            }
+
+            const data = await res.json();
+            url = data.url;
+
+            toast({
+              title: "Image uploaded successfully",
+              description: "Image has been uploaded successfully.",
+              className: "bg-green-500 text-white",
+            });
+          } catch (error) {
+            toast({
+              title: "Error uploading image",
+              description: error.message,
+              className: "bg-red-500 text-white",
+            });
+          }
         }
-
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: productImage }),
-        });
-
-        const { url } = await res.json();
 
         const result = await addProduct(
           newProduct.name,
@@ -237,7 +263,7 @@ export default function ProductManagement() {
           newProduct.price,
           newProduct.category,
           newProduct.stock,
-          url
+          url || null
         );
 
         if (!result.status) {
@@ -334,7 +360,7 @@ export default function ProductManagement() {
           {product.image && (
             <div className="flex-shrink-0">
               <Image
-                src={product.image}
+                src={product.image || "/placeholder.jpg"}
                 alt={product.name}
                 width={60}
                 height={60}
@@ -440,7 +466,10 @@ export default function ProductManagement() {
                     name="productName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Product Name</FormLabel>
+                        <FormLabel>
+                          Product Name
+                          <span className="text-red-500 ml-1">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input placeholder="Enter product name" {...field} />
                         </FormControl>
@@ -454,7 +483,10 @@ export default function ProductManagement() {
                     name="itemCode"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Item Code</FormLabel>
+                        <FormLabel>
+                          Item Code
+                          <span className="text-red-500 ml-1">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input placeholder="Enter product stock" {...field} />
                         </FormControl>
@@ -468,7 +500,10 @@ export default function ProductManagement() {
                     name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Price</FormLabel>
+                        <FormLabel>
+                          Price
+                          <span className="text-red-500 ml-1">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -486,7 +521,10 @@ export default function ProductManagement() {
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Category</FormLabel>
+                        <FormLabel>
+                          Category
+                          <span className="text-red-500 ml-1">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Select
                             onValueChange={field.onChange}
@@ -518,7 +556,7 @@ export default function ProductManagement() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Stock <span className="text-sm">(Optional)</span>
+                          Stock <span className="text-xs ml-2">(Optional)</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -536,7 +574,10 @@ export default function ProductManagement() {
                     name="productImage"
                     render={() => (
                       <FormItem>
-                        <FormLabel>Product Image</FormLabel>
+                        <FormLabel>
+                          Product Image
+                          <span className="text-xs ml-2">(Optional)</span>
+                        </FormLabel>
                         <FormControl>
                           <div className="flex items-center space-x-2">
                             <Input
@@ -659,15 +700,13 @@ export default function ProductManagement() {
                               {product.category}
                             </TableCell>
                             <TableCell>
-                              {product.image && (
-                                <Image
-                                  src={product.image}
-                                  alt={product.name}
-                                  width={50}
-                                  height={50}
-                                  className="rounded-md object-cover"
-                                />
-                              )}
+                              <Image
+                                src={product.image || "/placeholder.jpg"}
+                                alt={product.name}
+                                width={50}
+                                height={50}
+                                className="rounded-md object-cover"
+                              />
                             </TableCell>
                             <TableCell className="text-right">
                               <Button

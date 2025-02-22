@@ -21,14 +21,6 @@ export const Profile = ({ currentUser }) => (
     </CardHeader>
     <CardContent className="space-y-6">
       <div className="flex items-center space-x-4">
-        <Avatar className="h-20 w-20">
-          <AvatarFallback className="text-lg uppercase">
-            {currentUser?.username
-              .split(" ")
-              .map((n) => n[0])
-              .join("")}
-          </AvatarFallback>
-        </Avatar>
         <div>
           <h3 className="text-xl font-semibold">{currentUser?.username}</h3>
           <p className="text-sm text-gray-500">{currentUser?.email}</p>

@@ -19,13 +19,7 @@ export const getProducts = async () => {
 };
 
 export const addProduct = async (
-  name: string,
-  itemCode: string,
-  price: string,
-  category: string,
-  stock: string,
-  image?: string
-) => {
+name: string, itemCode: string, price: string, category: string, stock: string, image?: string, p0?: { url: string; }) => {
   const db = await connectToDatabase();
 
   const product = await db.collection("products").findOne({ name });

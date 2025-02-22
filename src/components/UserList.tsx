@@ -48,13 +48,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, MoreVertical, Edit, Trash } from "lucide-react";
+import { UserPlus, MoreVertical, Edit, Trash, Calendar } from "lucide-react";
 import { createUser, deleteUser, updateUser } from "@/services/auth";
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+
 const roles = ["admin", "manager", "cashier", "user"] as const;
 
 const userSchema = z.object({
@@ -68,10 +69,61 @@ const userSchema = z.object({
   role: z.enum(roles, { message: "Please select a valid role" }),
 });
 
+const UserCard = ({ user, onEdit, onDelete }) => {
+  return (
+    <Card className="mb-4">
+      <CardContent className="pt-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-4">
+            <div>
+              <h3 className="font-semibold">{user.username}</h3>
+              <p className="text-sm text-gray-500">{user.email}</p>
+            </div>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onEdit(user)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={() => onDelete(user.id)}
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+              {user.role}
+            </div>
+          </div>
+          <div className="flex items-center text-sm text-gray-500">
+            <Calendar className="mr-2 h-4 w-4" />
+            {new Date(user.created_at).toLocaleDateString()}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 export const UserList = () => {
   const { fetchUsers, users } = useUserStore();
   const [editUser, setEditUser] = useState(false);
   const [editUserId, setEditUserId] = useState(null);
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -137,6 +189,7 @@ export const UserList = () => {
       console.error("Error adding user:", error);
     }
   };
+
   const handleDeleteUser = async (userId) => {
     try {
       const result = await deleteUser(userId);
@@ -170,9 +223,9 @@ export const UserList = () => {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-2xl font-bold">Users</CardTitle>
+    <Card className="w-full max-w-[100vw] overflow-hidden">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 p-4 sm:p-6">
+        <CardTitle className="text-xl sm:text-2xl font-bold">Users</CardTitle>
         <Dialog
           open={open}
           onOpenChange={(open) => {
@@ -182,12 +235,12 @@ export const UserList = () => {
           }}
         >
           <DialogTrigger asChild>
-            <Button onClick={() => setOpen(true)}>
+            <Button onClick={() => setOpen(true)} className="w-full sm:w-auto">
               <UserPlus className="mr-2 h-4 w-4" />
               {editUser ? "Edit User" : "Add User"}
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] w-[95vw] sm:w-full">
             <DialogHeader>
               <DialogTitle>{editUser ? "Edit User" : "Add User"}</DialogTitle>
               <DialogDescription>
@@ -228,7 +281,7 @@ export const UserList = () => {
                   )}
                 />
 
-                {
+                {!editUser && (
                   <FormField
                     control={form.control}
                     name="password"
@@ -244,7 +297,7 @@ export const UserList = () => {
                       </FormItem>
                     )}
                   />
-                }
+                )}
 
                 <FormField
                   control={form.control}
@@ -273,7 +326,11 @@ export const UserList = () => {
                 />
 
                 <DialogFooter>
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
+                  <Button
+                    type="submit"
+                    disabled={form.formState.isSubmitting}
+                    className="w-full sm:w-auto"
+                  >
                     {editUser ? "Edit User" : "Add User"}
                   </Button>
                 </DialogFooter>
@@ -282,15 +339,26 @@ export const UserList = () => {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
+      <CardContent className="p-4 sm:p-6">
+        <div className="sm:hidden">
+          {users.map((user) => (
+            <UserCard
+              key={user.id}
+              user={user}
+              onEdit={handleEditUser}
+              onDelete={handleDeleteUser}
+            />
+          ))}
+        </div>
+
+        <div className="hidden sm:block overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-[40%]">User</TableHead>
+                <TableHead className="w-[20%]">Role</TableHead>
+                <TableHead className="w-[30%]">Created</TableHead>
+                <TableHead className="w-[10%] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -298,7 +366,7 @@ export const UserList = () => {
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center space-x-3">
-                      <Avatar>
+                      <Avatar className="h-10 w-10">
                         <AvatarFallback>
                           {user.username
                             .split(" ")

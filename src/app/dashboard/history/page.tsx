@@ -115,7 +115,8 @@ const BillHistoryPage = () => {
     const isDateMatch =
       (!startDate || new Date(bill.date) >= new Date(startDate)) &&
       (!endDate || new Date(bill.date) <= new Date(endDate));
-    if (selectedDate) {
+    
+      if (selectedDate) {
       const selectedDateObj = new Date(selectedDate);
       const billDateObj = new Date(bill.date);
       return (
@@ -123,6 +124,8 @@ const BillHistoryPage = () => {
         billDateObj.getMonth() === selectedDateObj.getMonth() &&
         billDateObj.getFullYear() === selectedDateObj.getFullYear()
       );
+
+      
     }
 
     return isSearchMatch && (startDate && endDate ? isDateMatch : isMonthMatch);
@@ -365,28 +368,34 @@ const BillHistoryPage = () => {
           <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
         </div>
 
-        <div className="flex space-x-4">
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <div className="min-w-[150px] text-center">
-              {format(currentMonth, "MMMM yyyy")}
+        <div className="flex space-x-4 ">
+          <div className="flex sm:flex-row flex-col justify-between items-center gap-2">
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePreviousMonth}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="min-w-[150px] text-center">
+                {format(currentMonth, "MMMM yyyy")}
+              </div>
+              <Button variant="outline" size="icon" onClick={handleNextMonth}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-            <Button variant="outline" size="icon" onClick={handleNextMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="border border-gray-300 rounded-md px-2 py-1"
-              style={{
-                backgroundColor: darkMode ? "black" : "white",
-              }}
-            />
+            <div className="flex items-center space-x-2 w-full">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="p-2  rounded-md w-full"
+                style={{
+                  colorScheme: darkMode ? "dark" : "light",
+                }}
+              />
+            </div>
           </div>
           <div>
             <TooltipProvider>
@@ -523,7 +532,9 @@ const BillHistoryPage = () => {
                   <TableRow
                     key={bill.id}
                     className={
-                      bill.refunded ? "bg-red-500 hover:bg-red-500 text-white" : ""
+                      bill.refunded
+                        ? "bg-red-500 hover:bg-red-500 text-white"
+                        : ""
                     }
                   >
                     <TableCell className="font-medium">

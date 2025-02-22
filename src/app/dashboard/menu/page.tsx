@@ -346,7 +346,7 @@ const MenuPage = () => {
     { key: "↑", description: "Select item above" },
     { key: "↓", description: "Select item below" },
     { key: "S", description: "Focus search input" },
-    { key: "C", description: "Focus cash amount input" },
+    { key: "C", description: "Focus customer paid input" },
     { key: "D", description: "Focus discount input" },
     { key: "P", description: "Print bill" },
     { key: "Esc", description: "Clear cart" },
@@ -549,7 +549,7 @@ const MenuPage = () => {
                       onClick={() => setSelectedCategory(category.name)}
                     >
                       <Image
-                        src={category.image || "/placeholder.png"}
+                        src={category.image || "/placeholder.jpg"}
                         alt={category.name}
                         width={24}
                         height={24}
@@ -599,7 +599,7 @@ const MenuPage = () => {
                               src={
                                 product.image
                                   ? product.image
-                                  : "/placeholder.png"
+                                  : "/placeholder.jpg"
                               }
                               alt={product.name}
                               width={200}
@@ -631,12 +631,19 @@ const MenuPage = () => {
                                   )}
                                 </p>
                               </div>
-                              <Badge
-                                variant="outline"
-                                className={`${"text-green-600 border-green-600"}`}
-                              >
-                                {product.stock}
-                              </Badge>
+                              {product.stock > 0 || product.stock ? (
+                                <>
+                                  {" "}
+                                  <Badge
+                                    variant="outline"
+                                    className={`${"text-green-600 border-green-600"}`}
+                                  >
+                                    {product.stock}
+                                  </Badge>
+                                </>
+                              ) : (
+                                <></>
+                              )}
                             </div>
                             <Button
                               onClick={(e) => {
@@ -664,7 +671,7 @@ const MenuPage = () => {
         <Card className="w-full max-w-xs mx-auto">
           <div className="flex justify-between items-center p-4 gap-2">
             <div>
-              <span className="text-xs">Given Amount (C)</span>
+              <span className="text-xs">Customer paid (C)</span>
               <Input
                 placeholder="amount_given"
                 type="number"

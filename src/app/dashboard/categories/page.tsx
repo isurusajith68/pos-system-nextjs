@@ -111,21 +111,35 @@ export default function CategoryManagement() {
   };
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (editingCategory) {
-      if (!categoryImage) {
-        return toast({
-          title: "Error updating category",
-          description: "Category image is required.",
-          className: "bg-red-500 text-white",
-        });
+      let url: string | undefined;
+      if (categoryImage) {
+        try {
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: categoryImage }),
+          });
+
+          if (!res.ok) {
+            throw new Error(`Failed to upload image: ${res.statusText}`);
+          }
+
+          const data = await res.json();
+          url = data.url;
+
+          toast({
+            title: "Image uploaded successfully",
+            description: "Image has been uploaded successfully.",
+            className: "bg-green-500 text-white",
+          });
+        } catch (error) {
+          toast({
+            title: "Error uploading image",
+            description: error.message,
+            className: "bg-red-500 text-white",
+          });
+        }
       }
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: categoryImage }),
-      });
-
-      const { url } = await res.json();
 
       await updateCategory(editingCategory.id, values.categoryName, url);
       setEditingCategory(null);
@@ -135,21 +149,35 @@ export default function CategoryManagement() {
         className: "bg-green-500 text-white",
       });
     } else {
-      if (!categoryImage) {
-        return toast({
-          title: "Error adding category",
-          description: "Category image is required.",
-          className: "bg-red-500 text-white",
-        });
+      let url: string | undefined;
+      if (categoryImage) {
+        try {
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: categoryImage }),
+          });
+
+          if (!res.ok) {
+            throw new Error(`Failed to upload image: ${res.statusText}`);
+          }
+
+          const data = await res.json();
+          url = data.url;
+
+          toast({
+            title: "Image uploaded successfully",
+            description: "Image has been uploaded successfully.",
+            className: "bg-green-500 text-white",
+          });
+        } catch (error) {
+          toast({
+            title: "Error uploading image",
+            description: error.message,
+            className: "bg-red-500 text-white",
+          });
+        }
       }
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: categoryImage }),
-      });
-
-      const { url } = await res.json();
 
       const result = await addCategory(values.categoryName, url);
 
@@ -249,7 +277,10 @@ export default function CategoryManagement() {
                   name="categoryName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category Name</FormLabel>
+                      <FormLabel>
+                        Category Name{" "}
+                        <span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="Enter category name" {...field} />
                       </FormControl>
@@ -262,7 +293,10 @@ export default function CategoryManagement() {
                   name="categoryImage"
                   render={() => (
                     <FormItem>
-                      <FormLabel>Category Image</FormLabel>
+                      <FormLabel>
+                        Category Image{" "}
+                        <span className="text-xs ml-2">(Optional)</span>
+                      </FormLabel>
                       <FormControl>
                         <div className="flex items-center space-x-2">
                           <Input
@@ -283,7 +317,7 @@ export default function CategoryManagement() {
                           {categoryImage && (
                             <div className="text-sm text-muted-foreground">
                               <Image
-                                src={categoryImage}
+                                src={categoryImage || "/placeholder.jpg"}
                                 alt="Category Image"
                                 width={50}
                                 height={50}
@@ -346,15 +380,13 @@ export default function CategoryManagement() {
                         {category.name}
                       </TableCell>
                       <TableCell className="">
-                        {category.image && (
-                          <Image
-                            src={category.image || "/placeholder.png"}
-                            alt={category.name}
-                            width={40}
-                            height={40}
-                            className="rounded-md object-cover"
-                          />
-                        )}
+                        <Image
+                          src={category.image || "/placeholder.jpg"}
+                          alt={category.name}
+                          width={40}
+                          height={40}
+                          className="rounded-md object-cover"
+                        />
                       </TableCell>
                       <TableCell className="text-right">
                         <Button

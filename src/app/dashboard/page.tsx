@@ -475,42 +475,50 @@ const DashboardPage = () => {
               </div>
             ) : (
               <>
-                <CardHeader>
-                  <CardTitle>Weekly Sales & Bill Count</CardTitle>
-                </CardHeader>
-                <CardContent className="h-[350px] sm:h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={sortedSalesData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="_id" />
-                      <YAxis yAxisId="left" stroke="#8884d8" />{" "}
-                      <YAxis
-                        yAxisId="right"
-                        orientation="right"
-                        stroke="#82ca9d"
-                      />{" "}
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: darkMode ? "black" : "white",
-                        }}
-                      />
-                      <Line
-                        yAxisId="left"
-                        type="monotone"
-                        dataKey="total"
-                        stroke="#8884d8"
-                        strokeWidth={2}
-                      />{" "}
-                      <Line
-                        yAxisId="right"
-                        type="monotone"
-                        dataKey="billCount"
-                        stroke="#82ca9d"
-                        strokeWidth={2}
-                      />{" "}
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
+                {sortedSalesData.length > 0 ? (
+                  <>
+                    <CardHeader>
+                      <CardTitle>Weekly Sales & Bill Count</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[350px] sm:h-[400px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={sortedSalesData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="_id" />
+                          <YAxis yAxisId="left" stroke="#8884d8" />{" "}
+                          <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            stroke="#82ca9d"
+                          />{" "}
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: darkMode ? "black" : "white",
+                            }}
+                          />
+                          <Line
+                            yAxisId="left"
+                            type="monotone"
+                            dataKey="total"
+                            stroke="#8884d8"
+                            strokeWidth={2}
+                          />{" "}
+                          <Line
+                            yAxisId="right"
+                            type="monotone"
+                            dataKey="billCount"
+                            stroke="#82ca9d"
+                            strokeWidth={2}
+                          />{" "}
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </>
+                ) : (
+                  <div className="flex justify-center items-center py-5">
+                    No data available
+                  </div>
+                )}
               </>
             )}
           </Card>
