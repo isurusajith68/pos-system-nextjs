@@ -22,7 +22,7 @@ const UserManagement = () => {
   const { user: currentUser } = useAuthStore();
 
   return (
-    <div className="container mx-auto sm:p-4 space-y-4">
+    <div className="container mx-auto sm:p-4 space-y-4  max-w-full">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Settings</h1>
         <div className="flex items-center space-x-2">

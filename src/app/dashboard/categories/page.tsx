@@ -240,7 +240,7 @@ export default function CategoryManagement() {
 
   return (
     <div
-      className="container mx-auto sm:p-4 space-y-4 scroll-area-c"
+      className="container mx-auto sm:p-4 space-y-4 scroll-area-c max-w-full"
       id="scroll-area-c"
     >
       <h1 className="text-xl font-bold text-primary mb-6">Category</h1>
