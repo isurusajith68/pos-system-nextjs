@@ -174,9 +174,16 @@ function App() {
                               : "text-red-600"
                           }`}
                         >
-                          {record.variance
-                            ? formatCurrency(record.variance)
-                            : "N/A"}
+                          {record.variance === 0 ? (
+                            <>
+                              {formatCurrency(record.variance)}
+                              <span className="text-muted-foreground">
+                                (No Variance)
+                              </span>
+                            </>
+                          ) : (
+                            formatCurrency(record.variance)
+                          )}
                           {record.variance >= 0 ? (
                             <TrendingUp className="h-4 w-4 ml-1" />
                           ) : (
