@@ -73,7 +73,7 @@ const formSchema = z.object({
     message: "Price must be a valid number with up to 2 decimal places.",
   }),
   category: z.string().min(1, { message: "Please select a category." }),
-  stock: z
+  stock: z.coerce
     .number()
     .int()
     .min(0, { message: "Stock must be a positive number." }),
