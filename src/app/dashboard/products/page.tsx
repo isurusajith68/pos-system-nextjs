@@ -680,6 +680,7 @@ export default function ProductManagement() {
                         <TableRow>
                           <TableHead>Product Name</TableHead>
                           <TableHead>Item Code</TableHead>
+                          <TableHead>Stock</TableHead>
                           <TableHead>Price</TableHead>
                           <TableHead>Category</TableHead>
                           <TableHead>Image</TableHead>
@@ -695,6 +696,7 @@ export default function ProductManagement() {
                             <TableCell>
                               {!product.itemCode ? "-" : product.itemCode}
                             </TableCell>
+                            <TableCell>{product.stock}</TableCell>
                             <TableCell>
                               Rs{" "}
                               {parseFloat(product.price.toString()).toFixed(2)}
