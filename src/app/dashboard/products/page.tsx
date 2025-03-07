@@ -565,6 +565,7 @@ export default function ProductManagement() {
                           <Input
                             placeholder="Enter stock quantity"
                             {...field}
+                            type="number"
                           />
                         </FormControl>
                         <FormMessage />
