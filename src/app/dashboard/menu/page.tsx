@@ -159,6 +159,28 @@ const MenuPage = () => {
 
   const addToCart = (product: { id: string; name: string; price: number }) => {
     setCart((prevCart) => {
+      products.filter((item) => {
+        if (item._id === product.id) {
+          if (item.stock === null) {
+            return;
+          }
+
+          const updatedStock = item.stock - 1;
+
+          if (updatedStock < 0) {
+            return;
+          }
+
+          products.filter((product) => {
+            if (product._id === item._id) {
+              product.stock = updatedStock;
+            }
+            return product;
+          });
+          return;
+        }
+      });
+
       const existingItem = prevCart.find((item) => item.id === product.id);
       if (existingItem) {
         return prevCart.map((item) =>
@@ -428,16 +450,25 @@ const MenuPage = () => {
       products.filter((product) => {
         cart.filter((item) => {
           if (product._id === item.id) {
+            if (product.stock === null) {
+              return;
+            }
+
             const updatedStock = product.stock - item.quantity;
+
+            if (updatedStock < 0) {
+              return;
+            }
+
             updateStock(product._id, updatedStock);
-            
+
             //update product list
             products.filter((product) => {
               if (product._id === item.id) {
                 product.stock = updatedStock;
               }
               return product;
-            })
+            });
 
             clearCart();
             return;
@@ -612,11 +643,19 @@ const MenuPage = () => {
                           }`}
                           onClick={() => {
                             setSelectedProductIndex(index);
-                            addToCart({
-                              id: product._id,
-                              name: product.name,
-                              price: product.price,
-                            });
+                            if (product.stock > 0 || product.stock === null) {
+                              addToCart({
+                                id: product._id,
+                                name: product.name,
+                                price: product.price,
+                              });
+                            } else {
+                              toast({
+                                title: "Out of stock",
+                                description: "This item is out of stock",
+                                variant: "destructive",
+                              });
+                            }
                           }}
                         >
                           <div className="relative h-32 overflow-hidden">
@@ -656,18 +695,19 @@ const MenuPage = () => {
                                   )}
                                 </p>
                               </div>
-                              {product.stock > 0 || product.stock ? (
+                              {product.stock >= 0 && product.stock !== null && (
                                 <>
-                                  {" "}
                                   <Badge
                                     variant="outline"
-                                    className={`${"text-green-600 border-green-600"}`}
+                                    className={
+                                      product.stock < 5
+                                        ? "text-red-500"
+                                        : "text-green-500"
+                                    }
                                   >
-                                    {product.stock}
+                                    stock: {product.stock}
                                   </Badge>
                                 </>
-                              ) : (
-                                <></>
                               )}
                             </div>
                             <Button
@@ -679,6 +719,7 @@ const MenuPage = () => {
                                   price: product.price,
                                 });
                               }}
+                              disabled={product.stock === 0}
                               className="w-full bg-primary hover:bg-primary/90 group-hover:scale-105 transition-transform"
                             >
                               Add to Bill

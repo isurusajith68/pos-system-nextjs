@@ -23,7 +23,7 @@ export const addProduct = async (
   itemCode: string,
   price: string,
   category: string,
-  stock: string,
+  stock: string | null,
   image?: string,
   p0?: { url: string }
 ) => {
@@ -39,7 +39,7 @@ export const addProduct = async (
     itemCode,
     price,
     category,
-    stock,
+    stock : stock ? Number(stock) : null,
     image,
     createdAt: new Date().toISOString(),
   });

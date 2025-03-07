@@ -262,7 +262,7 @@ export default function ProductManagement() {
           newProduct.itemCode,
           newProduct.price,
           newProduct.category,
-          newProduct.stock,
+          newProduct.stock === "0" ? null : newProduct.stock,
           url || null
         );
 
