@@ -469,7 +469,10 @@ const BillHistoryPage = () => {
                 <input
                   type="date"
                   value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
+                  onChange={(e) => {
+                    setCurrentPage(1);
+                    setSelectedDate(e.target.value);
+                  }}
                   className="p-2  rounded-md w-full"
                   style={{
                     colorScheme: darkMode ? "dark" : "light",
@@ -736,6 +739,10 @@ const BillHistoryPage = () => {
                       <span className="text-base font-semibold">
                         Showing {paginatedBills.length} of{" "}
                         {filteredBills.length} bills
+                        <span className="ml-2 border-r-2 pr-2 border-l-2 pl-2 border-white">
+                          {filteredBills.filter((bill) => bill.refunded).length}
+                          {" Refunded"}
+                        </span>
                         {user?.role === "admin" && (
                           <span
                             className={cn(
