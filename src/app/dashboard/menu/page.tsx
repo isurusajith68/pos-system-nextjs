@@ -220,10 +220,39 @@ const MenuPage = () => {
     });
   };
 
-  const clearCart = () => {
+  const clearCart = ({ stock }: { stock: boolean }) => {
+    if (stock) {
+      products.filter((product) => {
+        cart.filter((item) => {
+          if (product._id === item.id) {
+            if (product.stock === null) {
+              return;
+            }
+
+            const updatedStock = product.stock + item.quantity;
+
+            if (updatedStock < 0) {
+              return;
+            }
+
+            products.filter((product) => {
+              if (product._id === item.id) {
+                product.stock = updatedStock;
+              }
+              return product;
+            });
+
+            return;
+          }
+        });
+      });
+    }
     setCart([]);
     setCashAmount(0);
     setDiscount(0);
+
+    //reset stock
+
     if (cashInputRef.current) cashInputRef.current.value = "";
     if (discountInputRef.current) discountInputRef.current.value = "";
   };
@@ -394,7 +423,7 @@ const MenuPage = () => {
   });
 
   useHotkeys("escape", () => {
-    clearCart();
+    clearCart({ stock: true });
   });
 
   useHotkeys("space", () => {
@@ -509,7 +538,9 @@ const MenuPage = () => {
           }
         });
       });
-      clearCart();
+      clearCart({
+        stock: false,
+      });
     } else {
       toast({
         title: "Error",
@@ -544,7 +575,6 @@ const MenuPage = () => {
           description: "Bill printed successfully",
           className: "bg-green-500 border-green-500 text-white",
         });
-        clearCart();
       }
     } catch (error) {
       console.error("Print error:", error);
@@ -968,7 +998,11 @@ const MenuPage = () => {
             <Button
               variant="destructive"
               className="w-full hover:bg-destructive/90 transition-colors"
-              onClick={() => clearCart()}
+              onClick={() =>
+                clearCart({
+                  stock: true,
+                })
+              }
             >
               Clear Cart (Esc)
             </Button>
