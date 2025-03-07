@@ -61,6 +61,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useScrollStore } from "@/store/useScrollRef";
 import { scrollToTop } from "@/components/scrollToTop";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   productName: z
@@ -429,8 +430,8 @@ export default function ProductManagement() {
       id="scroll-area"
     >
       <h1 className="text-xl font-bold text-primary mb-6">Products</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="">
+      <div className=" grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
               {editingProduct ? "Edit Product" : "Add Product"}
@@ -691,13 +692,32 @@ export default function ProductManagement() {
                       <TableBody>
                         {filteredProducts.map((product) => (
                           <TableRow key={product._id}>
-                            <TableCell className="capitalize font-medium">
+                            <TableCell className="capitalize font-medium max-w-24 break-words whitespace-normal">
                               {product.name}
                             </TableCell>
+
                             <TableCell>
                               {!product.itemCode ? "-" : product.itemCode}
                             </TableCell>
-                            <TableCell>{product.stock}</TableCell>
+                            <TableCell>
+                              <Badge
+                                className={
+                                  product.stock === 0
+                                    ? "bg-red-500 text-white text-[10px]"
+                                    : product.stock < 5
+                                    ? "bg-yellow-500 text-white text-[10px]"
+                                    : "bg-green-500 text-white text-[10px]"
+                                }
+                              >
+                                {product.stock}{
+                                  product.stock === 0
+                                    ? " (Out of stock)"
+                                    : product.stock < 5
+                                    ? " (Low stock)"
+                                    : " (In stock)"
+                                }
+                              </Badge>
+                            </TableCell>
                             <TableCell>
                               Rs{" "}
                               {parseFloat(product.price.toString()).toFixed(2)}

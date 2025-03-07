@@ -245,11 +245,14 @@ const MenuPage = () => {
       filteredProductsByCategoryAndSearch.length > 0 &&
       selectedProductIndex >= 0
     ) {
-      addToCart({
-        id: filteredProductsByCategoryAndSearch[selectedProductIndex]._id,
-        name: filteredProductsByCategoryAndSearch[selectedProductIndex].name,
-        price: filteredProductsByCategoryAndSearch[selectedProductIndex].price,
-      });
+      if (filteredProductsByCategoryAndSearch[selectedProductIndex].stock > 0) {
+        addToCart({
+          id: filteredProductsByCategoryAndSearch[selectedProductIndex]._id,
+          name: filteredProductsByCategoryAndSearch[selectedProductIndex].name,
+          price:
+            filteredProductsByCategoryAndSearch[selectedProductIndex].price,
+        });
+      }
     }
   });
 
@@ -316,6 +319,25 @@ const MenuPage = () => {
         filteredProductsByCategoryAndSearch[selectedProductIndex];
 
       setCart((prevCart) => {
+        products.filter((item) => {
+          if (item._id === productToRemove._id) {
+            const updatedStock = item.stock + 1;
+
+            //real product stock get
+            if (cart.length > 0) {
+              products.filter((product) => {
+                if (product._id === item._id) {
+                  product.stock = updatedStock;
+                }
+                return product;
+              });
+            } else {
+              return;
+            }
+
+            return;
+          }
+        });
         const updatedCart = prevCart
           .map((item) => {
             if (item.id === productToRemove._id && item.quantity > 1) {
@@ -597,39 +619,36 @@ const MenuPage = () => {
                 </div>
                 <UtensilsCrossed className="h-8 w-8 text-primary opacity-80 max-sm:hidden" />
               </div>
-              <ScrollArea className="w-full max-w-full overflow-y-hidden py-4">
-                <div className="flex gap-3 whitespace-nowrap px-2">
+
+              <div className="flex gap-3 flex-wrap px-2">
+                <Badge
+                  variant={selectedCategory === null ? "default" : "outline"}
+                  className="cursor-pointer hover:scale-105 transition-all duration-200 px-4 py-2"
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  All Items
+                </Badge>
+                {categories.map((category) => (
                   <Badge
-                    variant={selectedCategory === null ? "default" : "outline"}
-                    className="cursor-pointer hover:scale-105 transition-all duration-200 px-4 py-2"
-                    onClick={() => setSelectedCategory(null)}
+                    key={category._id}
+                    variant={
+                      selectedCategory === category.name ? "default" : "outline"
+                    }
+                    className="cursor-pointer hover:scale-105 transition-all duration-200 flex items-center gap-2 px-4 py-2 capitalize "
+                    onClick={() => setSelectedCategory(category.name)}
                   >
-                    All Items
+                    <Image
+                      src={category.image || "/placeholder.jpg"}
+                      alt={category.name}
+                      width={24}
+                      height={24}
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                    {category.name}
                   </Badge>
-                  {categories.map((category) => (
-                    <Badge
-                      key={category._id}
-                      variant={
-                        selectedCategory === category.name
-                          ? "default"
-                          : "outline"
-                      }
-                      className="cursor-pointer hover:scale-105 transition-all duration-200 flex items-center gap-2 px-4 py-2 capitalize min-w-[100px]"
-                      onClick={() => setSelectedCategory(category.name)}
-                    >
-                      <Image
-                        src={category.image || "/placeholder.jpg"}
-                        alt={category.name}
-                        width={24}
-                        height={24}
-                        className="w-6 h-6 rounded-full object-cover"
-                      />
-                      {category.name}
-                    </Badge>
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
             </CardHeader>
 
             <CardContent className="p-6">
@@ -653,7 +672,15 @@ const MenuPage = () => {
                             selectedProductIndex === index
                               ? "border-2 border-primary"
                               : ""
-                          }`}
+                          } `}
+                          style={{
+                            backgroundColor:
+                              product.stock === 0
+                                ? "rgba(255, 0, 0, 0.1)"
+                                : product.stock < 5
+                                ? "rgba(255, 255, 0, 0.1)"
+                                : "rgba(0, 255, 0, 0.1)",
+                          }}
                           onClick={() => {
                             setSelectedProductIndex(index);
                             if (product.stock > 0 || product.stock === null) {
@@ -686,13 +713,34 @@ const MenuPage = () => {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <Badge
                               variant="secondary"
-                              className="absolute top-3 right-3 dark:bg-white/90 text-primary-foreground bg-black/90 backdrop-blur-sm"
+                              className={`absolute top-3 right-3  backdrop-blur-sm text-white ${
+                                product.stock === 0
+                                  ? "bg-red-500"
+                                  : product.stock < 5
+                                  ? "bg-yellow-500"
+                                  : "bg-green-500"
+                              }`}
+                            >
+                              {product.stock === 0
+                                ? "Out of stock"
+                                : product.stock < 5
+                                ? "Low stock"
+                                : "In stock"}
+                              {product.stock !== null && product.stock >= 0 && (
+                                <span className="text-xs ml-2">
+                                  ({product.stock})
+                                </span>
+                              )}
+                            </Badge>{" "}
+                            <Badge
+                              variant="secondary"
+                              className="absolute top-10 right-3 dark:bg-white/90 text-primary-foreground bg-black/90 backdrop-blur-sm"
                             >
                               {product.category}
                             </Badge>
                           </div>
                           <CardContent className="p-4">
-                            <h3 className="font-semibold text-lg mb-1 capitalize">
+                            <h3 className="font-semibold text-lg mb-1 capitalize max-w-full break-words whitespace-normal">
                               {product.name}{" "}
                               <span className="text-muted-foreground text-xs ml-2">
                                 ({product.itemCode})
@@ -708,7 +756,7 @@ const MenuPage = () => {
                                   )}
                                 </p>
                               </div>
-                              {product.stock >= 0 && product.stock !== null && (
+                              {/* {product.stock >= 0 && product.stock !== null && (
                                 <>
                                   <Badge
                                     variant="outline"
@@ -723,7 +771,7 @@ const MenuPage = () => {
                                     stock: {product.stock}
                                   </Badge>
                                 </>
-                              )}
+                              )} */}
                             </div>
                             <Button
                               onClick={(e) => {
@@ -812,7 +860,9 @@ const MenuPage = () => {
                     className="flex justify-between items-center"
                   >
                     <div>
-                      <p className="font-medium">{item.name}</p>
+                      <p className="font-medium max-w-32 break-words whitespace-normal">
+                        {item.name}
+                      </p>
                       <span className="text-sm text-muted-foreground">
                         Rs {parseFloat(item.price.toString()).toFixed(2)} x{" "}
                         {item.quantity}
