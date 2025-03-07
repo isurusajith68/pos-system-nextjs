@@ -1,5 +1,5 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -130,38 +130,66 @@ const BillHistoryPage = () => {
     }
   };
 
-  const filteredBills =
-    user?.role === "admin"
-      ? billHistory
-      : dailySales.filter((bill) => {
-          const billDate = new Date(bill.date);
-          const monthStart = startOfMonth(currentMonth);
-          const monthEnd = endOfMonth(currentMonth);
+  const [filteredBills, setFilteredBills] = useState([]);
 
-          const isSearchMatch =
-            bill.billNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            bill.date.includes(searchTerm);
+  useEffect(() => {
+    callFilteredBills();
+  }, [
+    user,
+    billHistory,
+    dailySales,
+    currentMonth,
+    searchTerm,
+    startDate,
+    endDate,
+    selectedDate,
+  ]);
 
-          const isMonthMatch = billDate >= monthStart && billDate <= monthEnd;
+  const callFilteredBills = useCallback(() => {
+    let filtered = user?.role === "admin" ? billHistory : dailySales;
 
-          const isDateMatch =
-            (!startDate || new Date(bill.date) >= new Date(startDate)) &&
-            (!endDate || new Date(bill.date) <= new Date(endDate));
+    filtered = filtered.filter((bill) => {
+      const billDate = new Date(bill.date);
+      const monthStart = startOfMonth(currentMonth);
+      const monthEnd = endOfMonth(currentMonth);
 
-          if (selectedDate) {
-            const selectedDateObj = new Date(selectedDate);
-            const billDateObj = new Date(bill.date);
-            return (
-              billDateObj.getDate() === selectedDateObj.getDate() &&
-              billDateObj.getMonth() === selectedDateObj.getMonth() &&
-              billDateObj.getFullYear() === selectedDateObj.getFullYear()
-            );
-          }
+      const isSearchMatch =
+        bill.billNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.date.includes(searchTerm);
 
-          return (
-            isSearchMatch && (startDate && endDate ? isDateMatch : isMonthMatch)
-          );
-        });
+      const isMonthMatch = billDate >= monthStart && billDate <= monthEnd;
+
+      const isDateMatch =
+        (!startDate || billDate >= new Date(startDate)) &&
+        (!endDate || billDate <= new Date(endDate));
+
+      if (selectedDate) {
+        const selectedDateObj = new Date(selectedDate);
+        return (
+          billDate.getDate() === selectedDateObj.getDate() &&
+          billDate.getMonth() === selectedDateObj.getMonth() &&
+          billDate.getFullYear() === selectedDateObj.getFullYear() &&
+          isSearchMatch &&
+          (startDate && endDate ? isDateMatch : isMonthMatch)
+        );
+      }
+
+      return (
+        isSearchMatch && (startDate && endDate ? isDateMatch : isMonthMatch)
+      );
+    });
+
+    setFilteredBills(filtered);
+  }, [
+    user,
+    billHistory,
+    dailySales,
+    currentMonth,
+    searchTerm,
+    startDate,
+    endDate,
+    selectedDate,
+  ]);
 
   const totalPages = Math.ceil(filteredBills.length / ITEMS_PER_PAGE);
   const paginatedBills = filteredBills.slice(
@@ -244,10 +272,14 @@ const BillHistoryPage = () => {
   const refundBill = async (billId: string) => {
     try {
       const result = await refundBillAction(billId);
-      console.log("Refund result:", result);
 
       if (result.success) {
-        fetchBills();
+        if (user?.role === "admin") {
+          fetchBills();
+        }
+        if (user?.role === "cashier") {
+          fetchDailyBills();
+        }
         toast({
           title: "Bill Refunded",
           description: "Bill has been refunded successfully.",
@@ -269,7 +301,7 @@ const BillHistoryPage = () => {
       });
     }
   };
-
+  console.log(filteredBills);
   const getBillStats = (bills: (typeof billHistory)[0][]) => {
     const notRefundedBills = filteredBills.filter((bill) => !bill.refunded);
 
@@ -282,7 +314,6 @@ const BillHistoryPage = () => {
 
   const getRefundedBillsStats = (bills: (typeof billHistory)[0][]) => {
     const refundedBills = filteredBills.filter((bill) => bill.refunded);
-    console.log(refundedBills);
     const totalRefunded = refundedBills.reduce(
       (acc, bill) => acc + bill.total,
       0
@@ -697,7 +728,12 @@ const BillHistoryPage = () => {
                               className="bg-destructive text-white"
                               onClick={async () => {
                                 await removeBill(bill.id);
-                                fetchBills();
+                                if (user?.role === "admin") {
+                                  fetchBills();
+                                }
+                                if (user?.role === "cashier") {
+                                  fetchDailyBills();
+                                }
                               }}
                             >
                               Delete Bill
