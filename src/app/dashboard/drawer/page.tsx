@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import { DollarSign, TrendingUp, TrendingDown, Calendar } from "lucide-react";
-import { getAllCash } from "@/services/cash";
+import { getAllCash } from "../../../services/cash";
 import { Card, CardContent } from "@/components/ui/card";
 
 function formatCurrency(amount: number) {

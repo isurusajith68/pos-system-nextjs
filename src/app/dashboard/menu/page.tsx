@@ -21,9 +21,9 @@ import {
   Keyboard,
 } from "lucide-react";
 import { useCategoryStore, useProductStore } from "@/store/useCategoryStore";
-import { getCategories } from "@/services/category";
+import { getCategories } from "../../../services/category";
 import Image from "next/image";
-import { getProducts } from "@/services/product";
+import { getProducts } from "../../../services/product";
 import { Input } from "@/components/ui/input";
 import { useReactToPrint } from "react-to-print";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -35,7 +35,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { debounce } from "lodash";
-import { addBill } from "@/services/bill";
+import { addBill } from "../../../services/bill";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,

@@ -22,7 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { loginUser } from "@/services/auth";
+import { loginUser } from "../services/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Loader } from "lucide-react";

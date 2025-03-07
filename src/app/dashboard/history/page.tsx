@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -35,8 +35,15 @@ import {
   Eye,
   Search,
   Trash2,
+  User,
 } from "lucide-react";
-import { getBillStats, refundBillAction, removeBill } from "@/services/bill";
+import {
+  getBillStats,
+  getDailyBills,
+  getDailySales,
+  refundBillAction,
+  removeBill,
+} from "../../../services/bill";
 import { useBillStore } from "@/store/useBillStore";
 import { Popover } from "@radix-ui/react-popover";
 import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -75,6 +82,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -85,10 +93,12 @@ const BillHistoryPage = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
   const { fetchBills, billHistory } = useBillStore();
+  const [dailySales, setDailySales] = useState([]);
   const [spinning, setSpinning] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const { toast } = useToast();
   const [darkMode, setDarkMode] = useState(false);
+  const { user } = useAuthStore();
 
   useEffect(() => {
     if (localStorage.getItem("theme") === "dark") {
@@ -96,40 +106,62 @@ const BillHistoryPage = () => {
       setDarkMode(true);
     }
   }, []);
-
   useEffect(() => {
-    fetchBills();
-  }, []);
-
-  const filteredBills = billHistory.filter((bill) => {
-    const billDate = new Date(bill.date);
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-
-    const isSearchMatch =
-      bill.billNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      bill.date.includes(searchTerm);
-
-    const isMonthMatch = billDate >= monthStart && billDate <= monthEnd;
-
-    const isDateMatch =
-      (!startDate || new Date(bill.date) >= new Date(startDate)) &&
-      (!endDate || new Date(bill.date) <= new Date(endDate));
-    
-      if (selectedDate) {
-      const selectedDateObj = new Date(selectedDate);
-      const billDateObj = new Date(bill.date);
-      return (
-        billDateObj.getDate() === selectedDateObj.getDate() &&
-        billDateObj.getMonth() === selectedDateObj.getMonth() &&
-        billDateObj.getFullYear() === selectedDateObj.getFullYear()
-      );
-
-      
+    if (user?.role === "admin") {
+      fetchBills();
     }
+    if (user?.role === "cashier") {
+      fetchDailyBills();
+      console.log("fetching daily bills");
+    }
+  }, [user]);
 
-    return isSearchMatch && (startDate && endDate ? isDateMatch : isMonthMatch);
-  });
+  const fetchDailyBills = async () => {
+    try {
+      const result = await getDailyBills();
+      console.log(result);
+      if (result.success) {
+        setDailySales(result.bills);
+      } else {
+        console.error("Failed to fetch daily bills:", result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching daily bills:", error);
+    }
+  };
+
+  const filteredBills =
+    user?.role === "admin"
+      ? billHistory
+      : dailySales.filter((bill) => {
+          const billDate = new Date(bill.date);
+          const monthStart = startOfMonth(currentMonth);
+          const monthEnd = endOfMonth(currentMonth);
+
+          const isSearchMatch =
+            bill.billNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            bill.date.includes(searchTerm);
+
+          const isMonthMatch = billDate >= monthStart && billDate <= monthEnd;
+
+          const isDateMatch =
+            (!startDate || new Date(bill.date) >= new Date(startDate)) &&
+            (!endDate || new Date(bill.date) <= new Date(endDate));
+
+          if (selectedDate) {
+            const selectedDateObj = new Date(selectedDate);
+            const billDateObj = new Date(bill.date);
+            return (
+              billDateObj.getDate() === selectedDateObj.getDate() &&
+              billDateObj.getMonth() === selectedDateObj.getMonth() &&
+              billDateObj.getFullYear() === selectedDateObj.getFullYear()
+            );
+          }
+
+          return (
+            isSearchMatch && (startDate && endDate ? isDateMatch : isMonthMatch)
+          );
+        });
 
   const totalPages = Math.ceil(filteredBills.length / ITEMS_PER_PAGE);
   const paginatedBills = filteredBills.slice(
@@ -239,8 +271,24 @@ const BillHistoryPage = () => {
   };
 
   const getBillStats = (bills: (typeof billHistory)[0][]) => {
-    const totalSales = filteredBills.reduce((acc, bill) => acc + bill.total, 0);
+    const notRefundedBills = filteredBills.filter((bill) => !bill.refunded);
+
+    const totalSales = notRefundedBills.reduce(
+      (acc, bill) => acc + bill.total,
+      0
+    );
     return { totalSales };
+  };
+
+  const getRefundedBillsStats = (bills: (typeof billHistory)[0][]) => {
+    const refundedBills = filteredBills.filter((bill) => bill.refunded);
+    console.log(refundedBills);
+    const totalRefunded = refundedBills.reduce(
+      (acc, bill) => acc + bill.total,
+      0
+    );
+
+    return { totalRefunded };
   };
 
   const BillDetails = ({ bill }: { bill: (typeof billHistory)[0] }) => (
@@ -507,6 +555,13 @@ const BillHistoryPage = () => {
 
                       <div className="flex items-center space-x-2">
                         <span className="text-muted-foreground">
+                          Total Refunded: Rs{" "}
+                          {getRefundedBillsStats(
+                            billHistory
+                          ).totalRefunded.toFixed(2)}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {" "}
                           Total Sales: Rs{" "}
                           {getBillStats(billHistory).totalSales.toFixed(2)}
                         </span>

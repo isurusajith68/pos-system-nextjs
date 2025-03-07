@@ -66,10 +66,12 @@ const UserManagement = () => {
 
       <Tabs defaultValue="users" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="users" className="flex items-center">
-            <Users className="mr-2 h-4 w-4" />
-            Users
-          </TabsTrigger>
+          {currentUser?.role === "admin" && (
+            <TabsTrigger value="users" className="flex items-center">
+              <Users className="mr-2 h-4 w-4" />
+              Users
+            </TabsTrigger>
+          )}
           <TabsTrigger value="profile" className="flex items-center">
             <User className="mr-2 h-4 w-4" />
             Profile
@@ -79,9 +81,11 @@ const UserManagement = () => {
             Settings
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="users">
-          <UserList />
-        </TabsContent>
+        {currentUser?.role === "admin" && (
+          <TabsContent value="users">
+            <UserList />
+          </TabsContent>
+        )}
         <TabsContent value="profile">
           <Profile currentUser={currentUser} />
         </TabsContent>

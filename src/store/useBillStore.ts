@@ -1,4 +1,4 @@
-import { getBills, getBillStats } from "@/services/bill";
+import { getBills, getBillStats, getDailySales } from "../services/bill";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -24,6 +24,7 @@ interface BillStore {
   billHistory: Bill[];
   setBillHistory: (bills: Bill[]) => void;
   fetchBills: () => Promise<void>;
+  fetchDailyBills: () => Promise<void>;
 }
 
 export const useBillStore = create<BillStore>()(
@@ -41,6 +42,19 @@ export const useBillStore = create<BillStore>()(
         }
       } catch (error) {
         console.error("Error fetching bills:", error);
+      }
+    },
+    fetchDailyBills: async () => {
+      try {
+        const result = await getDailySales();
+        console.log(result);
+        if (result.success) {
+          set({ billHistory: result.bills });
+        } else {
+          console.error("Failed to fetch daily bills:", result.error);
+        }
+      } catch (error) {
+        console.error("Error fetching daily bills:", error);
       }
     },
   }))

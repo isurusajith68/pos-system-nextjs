@@ -27,7 +27,7 @@ import {
   deleteProduct,
   getProducts,
   updateProduct,
-} from "@/services/product";
+} from "../../../services/product";
 import {
   Form,
   FormControl,
@@ -39,7 +39,7 @@ import {
 import { RiLoader2Fill, RiResetRightLine } from "react-icons/ri";
 import { Edit, Loader, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
-import { getCategories } from "@/services/category";
+import { getCategories } from "../../../services/category";
 import {
   AlertDialog,
   AlertDialogAction,

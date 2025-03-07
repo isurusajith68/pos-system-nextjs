@@ -88,11 +88,47 @@ export const getBills = async () => {
       refunded: bill.refunded,
       refundedAt: bill.refundedAt?.toISOString(),
     }));
-    console.log(serializableBills);
     return { success: true, bills: serializableBills };
   } catch (error) {
     console.error("Error fetching bills:", error);
     return { success: false, error: "Failed to fetch bills" };
+  }
+};
+
+export const getDailyBills = async () => {
+  try {
+    const db = await connectToDatabase();
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
+
+    const billsCollection = db.collection("bills");
+
+    const bills = await billsCollection
+      .find({ createdAt: { $gte: startOfToday, $lt: endOfToday } })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    const serializableBills = bills.map((bill) => ({
+      id: bill._id.toString(),
+      billNumber: bill.billNo,
+      date: bill.date,
+      time: bill.time,
+      total: bill.totalBill,
+      subTotal: bill.subTotal,
+      cash: bill.cashAmount,
+      change: bill.changeAmount,
+      discountAmount: bill.discountAmount,
+      discount: bill.discount,
+      cart: bill.cart,
+      createdAt: bill.createdAt.toISOString(),
+      refunded: bill.refunded,
+      refundedAt: bill.refundedAt?.toISOString(),
+    }));
+    return { success: true, bills: serializableBills };
+  } catch (error) {
+    console.error("Error fetching daily bills:", error);
+    return { success: false, error: "Failed to fetch daily bills" };
   }
 };
 

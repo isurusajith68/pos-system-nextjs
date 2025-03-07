@@ -20,12 +20,16 @@ import {
   Loader,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { getBillStats, getDailySales, salesDataWeekly } from "@/services/bill";
+import {
+  getBillStats,
+  getDailySales,
+  salesDataWeekly,
+} from "../../services/bill";
 import { useStats } from "@/store/useStats";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast, useToast } from "@/hooks/use-toast";
-import { getCash, starterCash, updateCash } from "@/services/cash";
+import { getCash, starterCash, updateCash } from "../../services/cash";
 import { Toaster } from "@/components/ui/toaster";
 import { useCashDrawer } from "@/store/useCashDrawer";
 import { useSalesData } from "@/store/useSalesData";

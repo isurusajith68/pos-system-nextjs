@@ -49,7 +49,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, MoreVertical, Edit, Trash, Calendar } from "lucide-react";
-import { createUser, deleteUser, updateUser } from "@/services/auth";
+import { createUser, deleteUser, updateUser } from "../services/auth";
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import { useForm } from "react-hook-form";

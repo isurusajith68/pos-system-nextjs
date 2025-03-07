@@ -30,7 +30,7 @@ import {
   deleteCategory,
   getCategories,
   updateCategory,
-} from "@/services/category";
+} from "../../../services/category";
 import { RiLoader2Fill, RiResetRightLine } from "react-icons/ri";
 import {
   Tooltip,

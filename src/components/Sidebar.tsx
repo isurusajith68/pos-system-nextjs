@@ -13,7 +13,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import Link from "next/link";
-import { logoutUser } from "@/services/auth";
+import { logoutUser } from "../services/auth";
 import { usePathname } from "next/navigation";
 
 const Sidebar = () => {

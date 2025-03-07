@@ -3,7 +3,7 @@ import {
   getAllUsers,
   deleteUser,
   updateUser as updateUserProfile,
-} from "@/services/auth";
+} from "../services/auth";
 
 export interface User {
   id: string;
