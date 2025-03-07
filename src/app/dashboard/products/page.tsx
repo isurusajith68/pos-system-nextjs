@@ -73,7 +73,10 @@ const formSchema = z.object({
     message: "Price must be a valid number with up to 2 decimal places.",
   }),
   category: z.string().min(1, { message: "Please select a category." }),
-  stock: z.string().optional(),
+  stock: z
+    .number()
+    .int()
+    .min(0, { message: "Stock must be a positive number." }),
   productImage:
     typeof window !== "undefined" ? z.instanceof(File).optional() : z.any(),
 });
@@ -106,7 +109,7 @@ export default function ProductManagement() {
       itemCode: "",
       price: "",
       category: "",
-      stock: "",
+      stock: 0,
     },
   });
   const [spinning, setSpinning] = useState(false);
@@ -341,7 +344,7 @@ export default function ProductManagement() {
     form.setValue("itemCode", product.itemCode);
     form.setValue("price", product.price.toString());
     form.setValue("category", product.category);
-    form.setValue("stock", product.stock.toString());
+    form.setValue("stock", product.stock);
     setProductImage(product.image);
 
     scrollToTop(document.getElementById("scroll-area"), true);

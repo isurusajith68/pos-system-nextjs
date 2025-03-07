@@ -23,7 +23,7 @@ export const addProduct = async (
   itemCode: string,
   price: string,
   category: string,
-  stock: string,
+  stock: number,
   image?: string,
   p0?: { url: string }
 ) => {
@@ -53,7 +53,7 @@ export const updateProduct = async (
   itemCode: string,
   price: string,
   category: string,
-  stock: string,
+  stock: number,
   image?: string
 ) => {
   const db = await connectToDatabase();
