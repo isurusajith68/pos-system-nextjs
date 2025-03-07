@@ -713,7 +713,9 @@ const MenuPage = () => {
                                   <Badge
                                     variant="outline"
                                     className={
-                                      product.stock < 5
+                                      product.stock === 0
+                                        ? "text-red-500"
+                                        : product.stock < 5
                                         ? "text-yellow-500"
                                         : "text-green-500"
                                     }
