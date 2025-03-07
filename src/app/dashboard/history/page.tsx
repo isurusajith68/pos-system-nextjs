@@ -691,13 +691,19 @@ const BillHistoryPage = () => {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="hover:bg-secondary"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                   {
+                                     user?.role === "admin" ? (
+                                       <Button
+                                         variant="ghost"
+                                         size="icon"
+                                         className="hover:bg-destructive"
+                                       >
+                                         <Trash2 className="h-4 w-4" />
+                                       </Button>
+                                     ) : (
+                                       <></>
+                                     )
+                                   }
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent

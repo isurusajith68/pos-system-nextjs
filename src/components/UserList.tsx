@@ -56,7 +56,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-const roles = ["admin", "manager", "cashier", "user"] as const;
+const roles = ["admin", "cashier"] as const;
 
 const userSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
