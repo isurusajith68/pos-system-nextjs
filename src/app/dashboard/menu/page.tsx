@@ -467,7 +467,7 @@ const MenuPage = () => {
               return;
             }
 
-            const updatedStock = product.stock - item.quantity;
+            const updatedStock = product.stock;
 
             if (updatedStock < 0) {
               return;
