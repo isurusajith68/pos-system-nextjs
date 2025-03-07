@@ -573,36 +573,14 @@ const BillHistoryPage = () => {
       <div className="hidden md:block">
         <Card>
           <CardHeader>
-            <CardTitle>Bills</CardTitle>
+            <CardTitle>
+              <div className="flex justify-between items-center space-x-2">
+                <h3 className="text-xl font-semibold">Bill History</h3>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0 sm:p-6">
             <Table>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={9}>
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">
-                        Showing {paginatedBills.length} of{" "}
-                        {filteredBills.length} bills
-                      </span>
-
-                      <div className="flex items-center space-x-2">
-                        <span className="text-muted-foreground">
-                          Total Refunded: Rs{" "}
-                          {getRefundedBillsStats(
-                            billHistory
-                          ).totalRefunded.toFixed(2)}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {" "}
-                          Total Sales: Rs{" "}
-                          {getBillStats(billHistory).totalSales.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
               <TableHeader>
                 <TableRow>
                   <TableHead>Bill Number</TableHead>
@@ -691,19 +669,17 @@ const BillHistoryPage = () => {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="">
-                                   {
-                                     user?.role === "admin" ? (
-                                       <Button
-                                         variant="ghost"
-                                         size="icon"
-                                         className="hover:bg-destructive"
-                                       >
-                                         <Trash2 className="h-4 w-4" />
-                                       </Button>
-                                     ) : (
-                                       <></>
-                                     )
-                                   }
+                                    {user?.role === "admin" ? (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="hover:bg-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    ) : (
+                                      <></>
+                                    )}
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent
@@ -753,6 +729,49 @@ const BillHistoryPage = () => {
                   </TableRow>
                 ))}
               </TableBody>
+              <TableFooter className="">
+                <TableRow className="">
+                  <TableCell colSpan={9} className="p-0 ">
+                    <div className="flex justify-between items-center bg-blue-600 text-white p-4 border-2 dark:border-white border-black rounded-lg">
+                      <span className="text-base font-semibold">
+                        Showing {paginatedBills.length} of{" "}
+                        {filteredBills.length} bills
+                        {user?.role === "admin" && (
+                          <span
+                            className={cn(
+                              "ml-2 px-2 py-1 rounded-full text-xs",
+                              selectedDate
+                                ? "bg-white text-black"
+                                : "bg-blue-800"
+                            )}
+                          >
+                            {selectedDate
+                              ? selectedDate
+                              : `All Dates - ${format(
+                                  currentMonth,
+                                  "MMMM yyyy"
+                                )}`}
+                          </span>
+                        )}
+                      </span>
+
+                      <div className="flex items-center space-x-2">
+                        <span className="text-base font-semibold border-r-2 pr-2 border-white">
+                          Total Refunded: Rs{" "}
+                          {getRefundedBillsStats(
+                            billHistory
+                          ).totalRefunded.toFixed(2)}
+                        </span>
+                        <span className="text-base font-semibold">
+                          {" "}
+                          Total Sales: Rs{" "}
+                          {getBillStats(billHistory).totalSales.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
 
             <div className="flex justify-center items-center space-x-2 mt-4">
