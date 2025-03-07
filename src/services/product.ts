@@ -19,7 +19,14 @@ export const getProducts = async () => {
 };
 
 export const addProduct = async (
-name: string, itemCode: string, price: string, category: string, stock: string, image?: string, p0?: { url: string; }) => {
+  name: string,
+  itemCode: string,
+  price: string,
+  category: string,
+  stock: string,
+  image?: string,
+  p0?: { url: string }
+) => {
   const db = await connectToDatabase();
 
   const product = await db.collection("products").findOne({ name });
@@ -65,6 +72,20 @@ export const updateProduct = async (
   );
 
   return { status: true, message: "Product updated successfully" };
+};
+
+export const updateStock = async (id: string, stock: number) => {
+  const db = await connectToDatabase();
+  await db.collection("products").updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        stock: Number(stock),
+      },
+    }
+  );
+
+  return { status: true, message: "Product stock updated successfully" };
 };
 
 export const deleteProduct = async (id: string) => {

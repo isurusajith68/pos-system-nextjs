@@ -23,7 +23,11 @@ import {
 import { useCategoryStore, useProductStore } from "@/store/useCategoryStore";
 import { getCategories } from "../../../services/category";
 import Image from "next/image";
-import { getProducts } from "../../../services/product";
+import {
+  getProducts,
+  updateProduct,
+  updateStock,
+} from "../../../services/product";
 import { Input } from "@/components/ui/input";
 import { useReactToPrint } from "react-to-print";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -418,6 +422,27 @@ const MenuPage = () => {
         title: "Bill added",
         description: "Bill added successfully",
         className: "bg-green-500 border-green-500 text-white",
+      });
+
+      //stock update
+      products.filter((product) => {
+        cart.filter((item) => {
+          if (product._id === item.id) {
+            const updatedStock = product.stock - item.quantity;
+            updateStock(product._id, updatedStock);
+            
+            //update product list
+            products.filter((product) => {
+              if (product._id === item.id) {
+                product.stock = updatedStock;
+              }
+              return product;
+            })
+
+            clearCart();
+            return;
+          }
+        });
       });
     } else {
       toast({
