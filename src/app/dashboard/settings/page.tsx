@@ -64,7 +64,10 @@ const UserManagement = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="users" className="space-y-4">
+      <Tabs
+        defaultValue={currentUser?.role === "admin" ? "users" : "profile"}
+        className="space-y-4"
+      >
         <TabsList>
           {currentUser?.role === "admin" && (
             <TabsTrigger value="users" className="flex items-center">

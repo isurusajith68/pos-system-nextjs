@@ -448,34 +448,36 @@ const BillHistoryPage = () => {
         </div>
 
         <div className="flex space-x-4 ">
-          <div className="flex sm:flex-row flex-col justify-between items-center gap-2">
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handlePreviousMonth}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="min-w-[150px] text-center">
-                {format(currentMonth, "MMMM yyyy")}
+          {user?.role === "admin" && (
+            <div className="flex sm:flex-row flex-col justify-between items-center gap-2">
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handlePreviousMonth}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="min-w-[150px] text-center">
+                  {format(currentMonth, "MMMM yyyy")}
+                </div>
+                <Button variant="outline" size="icon" onClick={handleNextMonth}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
-              <Button variant="outline" size="icon" onClick={handleNextMonth}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center space-x-2 w-full">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="p-2  rounded-md w-full"
+                  style={{
+                    colorScheme: darkMode ? "dark" : "light",
+                  }}
+                />
+              </div>
             </div>
-            <div className="flex items-center space-x-2 w-full">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="p-2  rounded-md w-full"
-                style={{
-                  colorScheme: darkMode ? "dark" : "light",
-                }}
-              />
-            </div>
-          </div>
+          )}
           <div>
             <TooltipProvider>
               <Tooltip>
