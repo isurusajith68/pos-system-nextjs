@@ -195,6 +195,19 @@ const MenuPage = () => {
 
   const removeFromCart = (productId: string) => {
     setCart((prevCart) => {
+      products.filter((item) => {
+        if (item._id === productId) {
+          const updatedStock = item.stock + 1;
+          products.filter((product) => {
+            if (product._id === item._id) {
+              product.stock = updatedStock;
+            }
+            return product;
+          });
+          return;
+        }
+      });
+
       const existingItem = prevCart.find((item) => item.id === productId);
       if (existingItem && existingItem.quantity > 1) {
         return prevCart.map((item) =>
@@ -470,11 +483,11 @@ const MenuPage = () => {
               return product;
             });
 
-            clearCart();
             return;
           }
         });
       });
+      clearCart();
     } else {
       toast({
         title: "Error",
@@ -701,7 +714,7 @@ const MenuPage = () => {
                                     variant="outline"
                                     className={
                                       product.stock < 5
-                                        ? "text-red-500"
+                                        ? "text-yellow-500"
                                         : "text-green-500"
                                     }
                                   >
