@@ -730,17 +730,16 @@ const MenuPage = () => {
                           }}
                         >
                           <div className="relative h-32 overflow-hidden">
-                            <Image
-                              src={
-                                product.image
-                                  ? product.image
-                                  : "/placeholder.jpg"
-                              }
-                              alt={product.name}
-                              width={200}
-                              height={200}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                            />
+<div className="flex justify-center item-center">
+  <img
+    src={product.image ? product.image : "/placeholder.jpg"}
+    alt={product.name}
+    width={100}
+    height={100}
+    className="object-cover group-hover:scale-110 transition-transform duration-300"
+  />
+</div>
+
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <Badge
                               variant="secondary"
