@@ -490,6 +490,44 @@ const MenuPage = () => {
       return;
     }
 
+    const lastBillNumber = await localStorage.getItem("lastBillNumber");
+
+    const bill = {
+      totalBill,
+      subTotal,
+      discount,
+      discountAmount,
+      changeAmount,
+      cashAmount,
+      date,
+      time,
+      cart,
+      billNo: lastBillNumber + 1,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/print", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bill),
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast({
+          title: "Bill printed",
+          description: "Bill printed successfully",
+          className: "bg-green-500 border-green-500 text-white",
+        });
+      }
+    } catch (error) {
+      console.error("Print error:", error);
+
+      toast({
+        title: "Error",
+        description: "Failed to print bill",
+        className: "bg-red-500 border-red-500 text-white",
+      });
+    }
     const result = await addBill({
       totalBill,
       subTotal,
@@ -545,43 +583,6 @@ const MenuPage = () => {
       toast({
         title: "Error",
         description: "Failed to add bill",
-        className: "bg-red-500 border-red-500 text-white",
-      });
-    }
-
-    const bill = {
-      totalBill,
-      subTotal,
-      discount,
-      discountAmount,
-      changeAmount,
-      cashAmount,
-      date,
-      time,
-      cart,
-      billNo: result.billNo,
-    };
-
-    try {
-      const response = await fetch("http://localhost:5000/print", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bill),
-      });
-      const result = await response.json();
-      if (result.success) {
-        toast({
-          title: "Bill printed",
-          description: "Bill printed successfully",
-          className: "bg-green-500 border-green-500 text-white",
-        });
-      }
-    } catch (error) {
-      console.error("Print error:", error);
-
-      toast({
-        title: "Error",
-        description: "Failed to print bill",
         className: "bg-red-500 border-red-500 text-white",
       });
     }

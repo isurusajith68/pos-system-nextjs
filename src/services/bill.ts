@@ -383,3 +383,21 @@ export const salesDataWeekly = async () => {
     return [];
   }
 };
+
+export const getLastBillNumber = async () => {
+  try {
+    const db = await connectToDatabase();
+    const billsCollection = db.collection("billCounter");
+
+    const counterDoc = await billsCollection.findOne({ _id: "billNumber" });
+
+    if (!counterDoc) {
+      return { success: false, error: "Bill counter not found" };
+    }
+
+    return { success: true, billNumber: counterDoc.number };
+  } catch (error) {
+    console.error("Error fetching last bill number:", error);
+    return { success: false, error: "Failed to fetch last bill number" };
+  }
+};

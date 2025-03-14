@@ -23,6 +23,7 @@ import React, { useEffect, useState } from "react";
 import {
   getBillStats,
   getDailySales,
+  getLastBillNumber,
   salesDataWeekly,
 } from "../../services/bill";
 import { useStats } from "@/store/useStats";
@@ -99,6 +100,26 @@ const DashboardPage = () => {
       document.documentElement.classList.add("dark");
       setDarkMode(true);
     }
+
+    const lastBillNumber = localStorage.getItem("lastBillNumber");
+    if (lastBillNumber) {
+      return;
+    }
+
+    fetchLastBillNumber();
+    async function fetchLastBillNumber() {
+      try {
+        const result = await getLastBillNumber();
+        if (result.success) {
+          localStorage.setItem("lastBillNumber", result.billNumber.toString());
+        } else {
+          console.error("Failed to fetch last bill number:", result.error);
+        }
+      } catch (error) {
+        console.error("Error fetching last bill number:", error);
+      }
+    }
+
   }, []);
   useEffect(() => {
     const ex = totalRevenue + Number(startingCash);
