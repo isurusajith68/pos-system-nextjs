@@ -20,7 +20,11 @@ import {
   Loader,
   Keyboard,
 } from "lucide-react";
-import { useCategoryStore, useProductStore } from "@/store/useCategoryStore";
+import {
+  Ingredient,
+  useCategoryStore,
+  useProductStore,
+} from "@/store/useCategoryStore";
 import { getCategories } from "../../../services/category";
 import Image from "next/image";
 import {
@@ -67,6 +71,7 @@ const MenuPage = () => {
       name: string;
       price: number;
       quantity: number;
+      ingredients?: Ingredient[];
     }[]
   >([]);
   const [date, setDate] = useState<string>("");
@@ -157,30 +162,13 @@ const MenuPage = () => {
     );
   });
 
-  const addToCart = (product: { id: string; name: string; price: number }) => {
+  const addToCart = (product: {
+    id: string;
+    name: string;
+    price: number;
+    ingredients: Ingredient[];
+  }) => {
     setCart((prevCart) => {
-      products.filter((item) => {
-        if (item._id === product.id) {
-          if (item.stock === null) {
-            return;
-          }
-
-          const updatedStock = item.stock - 1;
-
-          if (updatedStock < 0) {
-            return;
-          }
-
-          products.filter((product) => {
-            if (product._id === item._id) {
-              product.stock = updatedStock;
-            }
-            return product;
-          });
-          return;
-        }
-      });
-
       const existingItem = prevCart.find((item) => item.id === product.id);
       if (existingItem) {
         return prevCart.map((item) =>
@@ -195,19 +183,6 @@ const MenuPage = () => {
 
   const removeFromCart = (productId: string) => {
     setCart((prevCart) => {
-      products.filter((item) => {
-        if (item._id === productId) {
-          const updatedStock = item.stock + 1;
-          products.filter((product) => {
-            if (product._id === item._id) {
-              product.stock = updatedStock;
-            }
-            return product;
-          });
-          return;
-        }
-      });
-
       const existingItem = prevCart.find((item) => item.id === productId);
       if (existingItem && existingItem.quantity > 1) {
         return prevCart.map((item) =>
@@ -221,32 +196,6 @@ const MenuPage = () => {
   };
 
   const clearCart = ({ stock }: { stock: boolean }) => {
-    if (stock) {
-      products.filter((product) => {
-        cart.filter((item) => {
-          if (product._id === item.id) {
-            if (product.stock === null) {
-              return;
-            }
-
-            const updatedStock = product.stock + item.quantity;
-
-            if (updatedStock < 0) {
-              return;
-            }
-
-            products.filter((product) => {
-              if (product._id === item.id) {
-                product.stock = updatedStock;
-              }
-              return product;
-            });
-
-            return;
-          }
-        });
-      });
-    }
     setCart([]);
     setCashAmount(0);
     setDiscount(0);
@@ -274,14 +223,13 @@ const MenuPage = () => {
       filteredProductsByCategoryAndSearch.length > 0 &&
       selectedProductIndex >= 0
     ) {
-      if (filteredProductsByCategoryAndSearch[selectedProductIndex].stock > 0) {
-        addToCart({
-          id: filteredProductsByCategoryAndSearch[selectedProductIndex]._id,
-          name: filteredProductsByCategoryAndSearch[selectedProductIndex].name,
-          price:
-            filteredProductsByCategoryAndSearch[selectedProductIndex].price,
-        });
-      }
+      addToCart({
+        id: filteredProductsByCategoryAndSearch[selectedProductIndex]._id,
+        name: filteredProductsByCategoryAndSearch[selectedProductIndex].name,
+        price: filteredProductsByCategoryAndSearch[selectedProductIndex].price,
+        ingredients:
+          filteredProductsByCategoryAndSearch[selectedProductIndex].ingredients,
+      });
     }
   });
 
@@ -350,14 +298,9 @@ const MenuPage = () => {
       setCart((prevCart) => {
         products.filter((item) => {
           if (item._id === productToRemove._id) {
-            const updatedStock = item.stock + 1;
-
             //real product stock get
             if (cart.length > 0) {
               products.filter((product) => {
-                if (product._id === item._id) {
-                  product.stock = updatedStock;
-                }
                 return product;
               });
             } else {
@@ -386,7 +329,10 @@ const MenuPage = () => {
   useHotkeys("plus", () => {
     if (cart.length > 0) {
       const firstItemInCart = cart[0];
-      addToCart(firstItemInCart);
+      addToCart({
+        ...firstItemInCart,
+        ingredients: firstItemInCart.ingredients || [],
+      });
     }
   });
 
@@ -459,6 +405,7 @@ const MenuPage = () => {
       name: string;
       price: number;
       quantity: number;
+      ingredients?: Ingredient[];
     }[];
   }) => {
     const {
@@ -552,26 +499,6 @@ const MenuPage = () => {
       products.filter((product) => {
         cart.filter((item) => {
           if (product._id === item.id) {
-            if (product.stock === null) {
-              return;
-            }
-
-            const updatedStock = product.stock;
-
-            if (updatedStock < 0) {
-              return;
-            }
-
-            updateStock(product._id, updatedStock);
-
-            //update product list
-            products.filter((product) => {
-              if (product._id === item.id) {
-                product.stock = updatedStock;
-              }
-              return product;
-            });
-
             return;
           }
         });
@@ -705,66 +632,37 @@ const MenuPage = () => {
                               : ""
                           } `}
                           style={{
-                            backgroundColor:
-                              product.stock === 0
-                                ? "rgba(255, 0, 0, 0.1)"
-                                : product.stock < 5
-                                ? "rgba(255, 255, 0, 0.1)"
-                                : "rgba(0, 255, 0, 0.1)",
+                            backgroundColor: "rgba(0, 255, 0, 0.1)",
                           }}
                           onClick={() => {
                             setSelectedProductIndex(index);
-                            if (product.stock > 0 || product.stock === null) {
-                              addToCart({
-                                id: product._id,
-                                name: product.name,
-                                price: product.price,
-                              });
-                            } else {
-                              toast({
-                                title: "Out of stock",
-                                description: "This item is out of stock",
-                                variant: "destructive",
-                              });
-                            }
+                            addToCart({
+                              id: product._id,
+                              name: product.name,
+                              price: product.price,
+                              ingredients: product.ingredients,
+                            });
                           }}
                         >
                           <div className="relative h-32 overflow-hidden">
-<div className="flex justify-center item-center">
-  <img
-    src={product.image ? product.image : "/placeholder.jpg"}
-    alt={product.name}
-    width={100}
-    height={100}
-    className="object-cover group-hover:scale-110 transition-transform duration-300"
-  />
-</div>
-
+                            <div className="flex justify-center item-center">
+                              <img
+                                src={
+                                  product.image
+                                    ? product.image
+                                    : "/placeholder.jpg"
+                                }
+                                alt={product.name}
+                                width={100}
+                                height={100}
+                                className="object-cover group-hover:scale-110 transition-transform duration-300"
+                              />
+                            </div>
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
                             <Badge
                               variant="secondary"
-                              className={`absolute top-3 right-3  backdrop-blur-sm text-white ${
-                                product.stock === 0
-                                  ? "bg-red-500"
-                                  : product.stock < 5
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
-                              }`}
-                            >
-                              {product.stock === 0
-                                ? "Out of stock"
-                                : product.stock < 5
-                                ? "Low stock"
-                                : "In stock"}
-                              {product.stock !== null && product.stock >= 0 && (
-                                <span className="text-xs ml-2">
-                                  ({product.stock})
-                                </span>
-                              )}
-                            </Badge>{" "}
-                            <Badge
-                              variant="secondary"
-                              className="absolute top-10 right-3 dark:bg-white/90 text-primary-foreground bg-black/90 backdrop-blur-sm"
+                              className="absolute top-3 right-3 dark:bg-white/90 text-primary-foreground bg-black/90 backdrop-blur-sm"
                             >
                               {product.category}
                             </Badge>
@@ -810,9 +708,9 @@ const MenuPage = () => {
                                   id: product._id,
                                   name: product.name,
                                   price: product.price,
+                                  ingredients: product.ingredients,
                                 });
                               }}
-                              disabled={product.stock === 0}
                               className="w-full bg-primary hover:bg-primary/90 group-hover:scale-105 transition-transform"
                             >
                               Add to Bill
@@ -911,7 +809,12 @@ const MenuPage = () => {
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => addToCart(item)}
+                        onClick={() =>
+                          addToCart({
+                            ...item,
+                            ingredients: item.ingredients || [],
+                          })
+                        }
                         className="h-8 w-8 rounded-full hover:bg-primary/10"
                       >
                         <Plus className="h-4 w-4" />

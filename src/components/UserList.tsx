@@ -145,7 +145,7 @@ export const UserList = () => {
     email: string;
     username: string;
     password: string;
-    role: string;
+    role: typeof roles[number];
   }) => {
     try {
       if (editUser) {

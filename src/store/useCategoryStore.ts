@@ -20,6 +20,14 @@ export const useCategoryStore = create<CategoryStore>((set) => ({
   setError: (error) => set({ error }),
 }));
 
+export interface Ingredient {
+  stockCurrentQuantity: number;
+  ingredientName: string;
+  units: string;
+  quantityPerProduct: string;
+  _id : string ;
+}
+
 interface ProductStore {
   products: {
     _id: string;
@@ -27,7 +35,7 @@ interface ProductStore {
     itemCode: string;
     price: number;
     category: string;
-    stock: number;
+    ingredients: Ingredient[];
     image?: string;
   }[];
   loadingProducts: boolean;
@@ -38,7 +46,7 @@ interface ProductStore {
       itemCode: string;
       price: number;
       category: string;
-      stock: number;
+      ingredients: Ingredient[];
       image?: string;
     }[]
   ) => void;
@@ -51,7 +59,7 @@ interface ProductStore {
     itemCode: string;
     price: number;
     category: string;
-    stock: number;
+    ingredients: Ingredient[];
     image?: string;
   } | null;
   setEditingProduct: (
@@ -61,7 +69,7 @@ interface ProductStore {
       itemCode: string;
       price: number;
       category: string;
-      stock: number;
+      ingredients: Ingredient[];
       image?: string;
     } | null
   ) => void;

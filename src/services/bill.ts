@@ -1,6 +1,7 @@
 "use server";
 
 import { connectToDatabase } from "@/lib/mongodb";
+import { Ingredient } from "@/store/useCategoryStore";
 import { endOfDay, startOfDay, sub } from "date-fns";
 import { ObjectId } from "mongodb";
 
@@ -18,6 +19,7 @@ export const addBill = async (bill: {
     name: string;
     price: number;
     quantity: number;
+    ingredients?: Ingredient[];
   }[];
 }) => {
   try {
@@ -38,6 +40,64 @@ export const addBill = async (bill: {
       { _id: "billNumber" },
       { $inc: { number: 1 } }
     );
+
+    console.log(bill.cart.map((item) => item.ingredients));
+
+    for (const item of bill.cart) {
+      if (!item.ingredients) {
+        const productsSalesCollection = db.collection("productsSales");
+        const productSales = await productsSalesCollection.findOne({
+          productId: new ObjectId(item.id),
+          productName: item.name,
+          price: item.price,
+
+          date: bill.date,
+        });
+
+        await productsSalesCollection.insertOne({
+          productId: new ObjectId(item.id),
+          productName: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          salesDate: new Date().toISOString(),
+        });
+        continue;
+      }
+      for (const ingredient of item?.ingredients) {
+        console.log(ingredient, "ingredient");
+        const stockCollection = db.collection("stocks");
+
+        const stock = await stockCollection.findOne({
+          _id: new ObjectId(ingredient._id),
+        });
+        if (!stock) {
+          console.warn(
+            `Stock not found for ingredient: ${ingredient.ingredientName}`
+          );
+          continue;
+        }
+
+        const requiredQuantity =
+          Number(item.quantity) * Number(ingredient.quantityPerProduct);
+
+        console.log("requiredQuantity", requiredQuantity);
+
+        const productsSalesCollection = db.collection("productsSales");
+
+        await productsSalesCollection.insertOne({
+          productId: new ObjectId(item.id),
+          productName: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          salesDate: new Date().toISOString(),
+        });
+
+        await stockCollection.updateOne(
+          { _id: new ObjectId(ingredient._id) },
+          { $inc: { currentQuantity: -requiredQuantity.toFixed(2) } }
+        );
+      }
+    }
 
     const billData = {
       billNo,
@@ -108,7 +168,6 @@ export const getDailyBills = async () => {
       .find({ createdAt: { $gte: startOfToday, $lt: endOfToday } })
       .sort({ createdAt: -1 })
       .toArray();
-
     const serializableBills = bills.map((bill) => ({
       id: bill._id.toString(),
       billNumber: bill.billNo,
@@ -399,5 +458,21 @@ export const getLastBillNumber = async () => {
   } catch (error) {
     console.error("Error fetching last bill number:", error);
     return { success: false, error: "Failed to fetch last bill number" };
+  }
+};
+
+export const getProductsSales = async () => {
+  try {
+    const db = await connectToDatabase();
+    const productsCollection = db.collection("productsSales");
+    const productsSales = await productsCollection
+      .find()
+      .sort({ salesDate: -1 })
+      .toArray();
+
+    return { success: true, productsSales };
+  } catch (error) {
+    console.error("Error fetching products sales:", error);
+    return { success: false, error: "Failed to fetch products sales" };
   }
 };

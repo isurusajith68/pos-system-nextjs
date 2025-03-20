@@ -83,6 +83,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAuthStore } from "@/store/useAuthStore";
+import Link from "next/link";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -107,6 +108,7 @@ const BillHistoryPage = () => {
     }
   }, []);
   useEffect(() => {
+    console.log(user);
     if (user?.role === "admin") {
       fetchBills();
     }
@@ -325,7 +327,9 @@ const BillHistoryPage = () => {
   const BillDetails = ({ bill }: { bill: (typeof billHistory)[0] }) => (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="border-b">
-        <CardTitle className="text-2xl font-bold">Bill Details</CardTitle>
+        <CardTitle className="text-2xl font-bold">
+          <>Bill Details</>
+        </CardTitle>
         {bill.refunded && (
           <div className="flex items-center space-x-2">
             <span className="text-red-500 text-xs">
@@ -433,7 +437,14 @@ const BillHistoryPage = () => {
 
   return (
     <div className="container mx-auto sm:p-4  max-w-full">
-      <h1 className="text-xl font-bold mb-6">Bill History</h1>
+      <h1 className="text-xl font-bold mb-6 flex items-center justify-between">
+        Bill History{" "}
+        <Button variant="outline" size="lg">
+          <Link href={`/dashboard/history/product-sales`}>
+            Product Item sales
+          </Link>
+        </Button>
+      </h1>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="relative w-full sm:w-64">

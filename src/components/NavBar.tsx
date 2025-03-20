@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getUserFromCookie, logoutUser } from "@/services/auth";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { IoReload, IoReloadCircle } from "react-icons/io5";
 import { set } from "date-fns";
 import { Lock, LogOut, Printer, User } from "lucide-react";
@@ -20,9 +20,8 @@ import {
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 
-export default function Navbar() {
+export default function Navbar({ user }) {
   const [darkMode, setDarkMode] = useState(false);
-  const { user, setUser } = useAuthStore();
   const [printerOnline, setPrinterOnline] = useState(false);
   const [count, setCount] = useState(0);
   const [spin, setSpin] = useState(false);
@@ -39,19 +38,6 @@ export default function Navbar() {
     localStorage.setItem("theme", newTheme);
     setDarkMode(!darkMode);
   };
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const user = await getUserFromCookie();
-      if (!user) {
-        redirect("/");
-      }
-      setUser(user);
-      console.log(user);
-    };
-
-    loadUser();
-  }, []);
 
   useEffect(() => {
     const fetchPrinterOnline = async () => {

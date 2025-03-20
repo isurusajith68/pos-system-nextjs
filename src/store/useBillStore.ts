@@ -4,7 +4,9 @@ import { devtools } from "zustand/middleware";
 
 interface Bill {
   refunded: boolean;
-  cart: { _id: string; name: string; quantity: number; price: number }[];
+  cart: {
+      id: any; _id: string; name: string; quantity: number; price: number 
+}[];
   id: string;
   billNumber: string;
   date: string;

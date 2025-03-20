@@ -51,7 +51,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useCategoryStore, useProductStore } from "@/store/useCategoryStore";
+import {
+  Ingredient,
+  useCategoryStore,
+  useProductStore,
+} from "@/store/useCategoryStore";
 import { useToast } from "@/hooks/use-toast";
 import {
   Tooltip,
@@ -62,6 +66,7 @@ import {
 import { useScrollStore } from "@/store/useScrollRef";
 import { scrollToTop } from "@/components/scrollToTop";
 import { Badge } from "@/components/ui/badge";
+import { getAllIngredientsNames } from "@/services/stock";
 
 const formSchema = z.object({
   productName: z
@@ -74,10 +79,21 @@ const formSchema = z.object({
     message: "Price must be a valid number with up to 2 decimal places.",
   }),
   category: z.string().min(1, { message: "Please select a category." }),
-  stock: z.coerce
-    .number()
-    .int()
-    .min(0, { message: "Stock must be a positive number." }),
+  ingredients: z
+    .array(
+      z.object({
+        _id: z.string(),
+        ingredientName: z
+          .string()
+          .min(2, { message: "Please select an ingredient." }),
+        units: z.string().min(1, { message: "Please select a unit." }),
+        quantityPerProduct: z.string().regex(/^[0-9]+(\.[0-9]{1,5})?$/, {
+          message:
+            "Quantity must be a valid number with up to 5 decimal places.",
+        }),
+      })
+    )
+    .optional(),
   productImage:
     typeof window !== "undefined" ? z.instanceof(File).optional() : z.any(),
 });
@@ -110,12 +126,14 @@ export default function ProductManagement() {
       itemCode: "",
       price: "",
       category: "",
-      stock: 0,
+      ingredients: [],
     },
   });
   const [spinning, setSpinning] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [ingredientsAll, setIngredients] = useState<Ingredient[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name
       .toLowerCase()
@@ -161,14 +179,14 @@ export default function ProductManagement() {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const { productName, price, category, stock, itemCode } = values;
+    const { productName, price, category, itemCode, ingredients } = values;
 
     const newProduct = {
       name: productName,
       itemCode,
       price,
       category,
-      stock,
+      ingredients,
       image: productImage ? productImage : undefined,
     };
 
@@ -210,7 +228,7 @@ export default function ProductManagement() {
           newProduct.itemCode,
           newProduct.price,
           newProduct.category,
-          newProduct.stock,
+          newProduct.ingredients,
           url || editingProduct.image || null
         );
 
@@ -266,7 +284,7 @@ export default function ProductManagement() {
           newProduct.itemCode,
           newProduct.price,
           newProduct.category,
-          newProduct.stock,
+          newProduct.ingredients,
           url || null
         );
 
@@ -306,6 +324,35 @@ export default function ProductManagement() {
   };
 
   useEffect(() => {
+    const fetchIngredients = async () => {
+      const data = await getAllIngredientsNames();
+      console.log(data);
+      setIngredients(data);
+      setIsLoading(false);
+    };
+    fetchIngredients();
+  }, []);
+
+  const handleIngredientChange = (value, index) => {
+    const selectedIngredient = ingredientsAll.find(
+      (ingredient) => ingredient.ingredientName === value
+    );
+
+    const updatedIngredients = [...form.getValues("ingredients")];
+    updatedIngredients[index].ingredientName = value;
+    updatedIngredients[index].units = selectedIngredient?.units || "";
+    updatedIngredients[index]._id = selectedIngredient?._id || "";
+
+    form.setValue("ingredients", updatedIngredients);
+  };
+  const handleAddIngredient = () => {
+    form.setValue("ingredients", [
+      ...(form.getValues("ingredients") || []),
+      { ingredientName: "", units: "", quantityPerProduct: "", _id: "" },
+    ]);
+  };
+
+  useEffect(() => {
     if (products.length === 0 && !loadingProducts) {
       fetchProducts();
     }
@@ -333,19 +380,30 @@ export default function ProductManagement() {
     itemCode: string;
     price: number;
     category: string;
-    stock: number;
+    ingredients: Ingredient[];
     image?: string;
   }) => {
+    form.reset();
+    setProductImage(null);
     setEditingProduct({
       ...product,
       price: parseFloat(product.price.toString()),
-      stock: parseInt(product.stock.toString(), 10),
     });
+    console.log(product);
     form.setValue("productName", product.name);
     form.setValue("itemCode", product.itemCode);
     form.setValue("price", product.price.toString());
+    form.setValue(
+      "ingredients",
+      product?.ingredients?.map((ingredient) => ({
+        ingredientName: ingredient.ingredientName,
+
+        units: ingredient.units,
+        quantityPerProduct: ingredient.quantityPerProduct,
+        _id: ingredient._id,
+      }))
+    );
     form.setValue("category", product.category);
-    form.setValue("stock", product.stock);
     setProductImage(product.image);
 
     scrollToTop(document.getElementById("scroll-area"), true);
@@ -554,26 +612,122 @@ export default function ProductManagement() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="stock"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Stock <span className="text-xs ml-2">(Optional)</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter stock quantity"
-                            {...field}
-                            type="number"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <Button type="button" onClick={handleAddIngredient}>
+                    Add Ingredients
+                  </Button>
 
+                  <table className="w-full border-collapse border border-gray-300 mt-4">
+                    <thead>
+                      <tr className="bg-gray-200">
+                        <th className="border border-gray-300 px-4 py-2 text-xs">
+                          Ingredient
+                        </th>
+                        <th className="border border-gray-300 px-4 py-2 text-xs">
+                          Unit
+                        </th>
+                        <th className="border border-gray-300 px-4 py-2 text-xs">
+                          Quantity per product
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {form.watch("ingredients")?.map((_, index) => (
+                        <tr key={index}>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}.ingredientName`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <Select
+                                    disabled={isLoading}
+                                    onValueChange={(value) => {
+                                      console.log(value);
+                                      handleIngredientChange(value, index);
+
+                                      field.onChange(value);
+                                    }}
+                                    value={form.watch(
+                                      `ingredients.${index}.ingredientName`
+                                    )}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select ingredient" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white border border-gray-300 rounded-md shadow-lg">
+                                      {ingredientsAll.map((ingredient, idx) => (
+                                        <SelectItem
+                                          key={idx}
+                                          value={
+                                            ingredient.ingredientName || ""
+                                          }
+                                        >
+                                          {ingredient.ingredientName}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </FormItem>
+                              )}
+                            />
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}._id`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <Input
+                                    {...field}
+                                    value={form.watch(
+                                      `ingredients.${index}._id`
+                                    )}
+                                    placeholder="Unit"
+                                    className="w-full hidden"
+                                    disabled
+                                  />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}.units`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <Input
+                                    {...field}
+                                    value={form.watch(
+                                      `ingredients.${index}.units`
+                                    )}
+                                    placeholder="Unit"
+                                    className="w-full"
+                                    disabled
+                                  />
+                                </FormItem>
+                              )}
+                            />
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <FormField
+                              control={form.control}
+                              name={`ingredients.${index}.quantityPerProduct`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <Input
+                                    {...field}
+                                    placeholder="Quantity per product"
+                                    className="w-full"
+                                  />
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                   <FormField
                     control={form.control}
                     name="productImage"
@@ -682,7 +836,6 @@ export default function ProductManagement() {
                         <TableRow>
                           <TableHead>Product Name</TableHead>
                           <TableHead>Item Code</TableHead>
-                          <TableHead>Stock</TableHead>
                           <TableHead>Price</TableHead>
                           <TableHead>Category</TableHead>
                           <TableHead>Image</TableHead>
@@ -699,25 +852,7 @@ export default function ProductManagement() {
                             <TableCell>
                               {!product.itemCode ? "-" : product.itemCode}
                             </TableCell>
-                            <TableCell>
-                              <Badge
-                                className={
-                                  product.stock === 0
-                                    ? "bg-red-500 text-white text-[10px]"
-                                    : product.stock < 5
-                                    ? "bg-yellow-500 text-white text-[10px]"
-                                    : "bg-green-500 text-white text-[10px]"
-                                }
-                              >
-                                {product.stock}{
-                                  product.stock === 0
-                                    ? " (Out of stock)"
-                                    : product.stock < 5
-                                    ? " (Low stock)"
-                                    : " (In stock)"
-                                }
-                              </Badge>
-                            </TableCell>
+
                             <TableCell>
                               Rs{" "}
                               {parseFloat(product.price.toString()).toFixed(2)}

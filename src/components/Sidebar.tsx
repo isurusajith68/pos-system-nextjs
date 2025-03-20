@@ -2,7 +2,7 @@
 
 import { BiSolidDashboard, BiCartAdd } from "react-icons/bi";
 import { TbLogout2 } from "react-icons/tb";
-import { RiArchiveDrawerFill, RiBillLine } from "react-icons/ri";
+import { RiArchiveDrawerFill, RiBillLine, RiStockFill } from "react-icons/ri";
 import { MdOutlineFastfood } from "react-icons/md";
 import { IoSettingsSharp } from "react-icons/io5";
 import { MdOutlineLibraryAdd } from "react-icons/md";
@@ -57,6 +57,12 @@ const Sidebar = () => {
       icon: <RiArchiveDrawerFill className="sm:w-10 w-6" />,
       label: "Drawer",
       link: "/dashboard/drawer",
+    },
+    {
+      id: "Stock",
+      icon: <RiStockFill className="sm:w-10 w-6" />,
+      label: "Stock",
+      link: "/dashboard/stock",
     },
     {
       id: "Settings",

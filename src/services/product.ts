@@ -23,9 +23,8 @@ export const addProduct = async (
   itemCode: string,
   price: string,
   category: string,
-  stock: number,
-  image?: string,
-  p0?: { url: string }
+  ingredients: unknown,
+  image?: string
 ) => {
   const db = await connectToDatabase();
 
@@ -39,7 +38,7 @@ export const addProduct = async (
     itemCode,
     price,
     category,
-    stock,
+    ingredients,
     image,
     createdAt: new Date().toISOString(),
   });
@@ -53,7 +52,7 @@ export const updateProduct = async (
   itemCode: string,
   price: string,
   category: string,
-  stock: number,
+  ingredients: unknown,
   image?: string
 ) => {
   const db = await connectToDatabase();
@@ -65,7 +64,7 @@ export const updateProduct = async (
         itemCode,
         price,
         category,
-        stock: Number(stock),
+        ingredients,
         image,
       },
     }
