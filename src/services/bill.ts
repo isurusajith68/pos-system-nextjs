@@ -476,3 +476,32 @@ export const getProductsSales = async () => {
     return { success: false, error: "Failed to fetch products sales" };
   }
 };
+
+export const lowStockProducts = async () => {
+  try {
+    console.log("Fetching low stock products");
+    const db = await connectToDatabase();
+    const stockCollection = db.collection("stocks");
+
+    const stock = await stockCollection.find().toArray();
+    console.log(stock);
+    const lowStockProduct = [];
+
+    for (const item of stock) {
+      if (item.currentQuantity <= item.minimumStockLevel) {
+        lowStockProduct.push(item);
+      }
+    }
+    console.log(lowStockProduct);
+
+    const lowStockProductData = lowStockProduct.map((item) => ({
+      ...item,
+      _id: item._id.toString(),
+    }));
+
+    return { success: true, lowStockProductData };
+  } catch (error) {
+    console.error("Error fetching low stock products:", error);
+    return { success: false, error: "Failed to fetch low stock products" };
+  }
+};

@@ -18,12 +18,14 @@ import {
   DollarSign,
   AlertCircle,
   Loader,
+  CheckCircle,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import {
   getBillStats,
   getDailySales,
   getLastBillNumber,
+  lowStockProducts,
   salesDataWeekly,
 } from "../../services/bill";
 import { useStats } from "@/store/useStats";
@@ -34,6 +36,7 @@ import { getCash, starterCash, updateCash } from "../../services/cash";
 import { Toaster } from "@/components/ui/toaster";
 import { useCashDrawer } from "@/store/useCashDrawer";
 import { useSalesData } from "@/store/useSalesData";
+import Link from "next/link";
 
 const salesData = [
   { day: "Mon", sales: 1000 },
@@ -50,7 +53,7 @@ const DashboardPage = () => {
   const [time, setTime] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-
+  const [lowStockProductsList, setLowStockProductsList] = useState([]);
   const {
     setDeclaredCash,
     setIsDayEnded,
@@ -101,11 +104,11 @@ const DashboardPage = () => {
       setDarkMode(true);
     }
 
+    lowStockProductsFetch();
     const lastBillNumber = localStorage.getItem("lastBillNumber");
     if (lastBillNumber) {
       return;
     }
-
     fetchLastBillNumber();
     async function fetchLastBillNumber() {
       try {
@@ -120,6 +123,20 @@ const DashboardPage = () => {
       }
     }
 
+    console.log("Fetching low stock products...");
+    async function lowStockProductsFetch() {
+      try {
+        const result = await lowStockProducts();
+        if (result.success) {
+          setLowStockProductsList(result.lowStockProductData);
+          console.log("Low stock products:", result.lowStockProductData);
+        } else {
+          console.error("Failed to fetch low stock products:", result.error);
+        }
+      } catch (error) {
+        console.error("Error fetching low stock products:", error);
+      }
+    }
   }, []);
   useEffect(() => {
     const ex = totalRevenue + Number(startingCash);
@@ -492,7 +509,47 @@ const DashboardPage = () => {
               </>
             )}
           </Card>
+          {lowStockProductsList.length > 0 && (
+            <Card className="p-5">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <AlertCircle className="text-yellow-500" /> Low Stock Alerts
+                </h2>
+                <Link
+                  href="/dashboard/stock"
+                  className="text-xs text-primary underline"
+                >
+                  Add Inventory
+                </Link>
+              </div>
 
+              {lowStockProductsList.length > 0 ? (
+                <ul className="mt-4 space-y-3">
+                  {lowStockProductsList.map((item) => (
+                    <li
+                      key={item._id}
+                      className="flex justify-between items-center p-3 bg-red-100 rounded-lg"
+                    >
+                      <span className="text-gray-700">
+                        <strong>{item.ingredientName}</strong> is low on stock (
+                        {item.currentQuantity} {item.unitOfMeasurement} left)
+                      </span>
+                      <span className="px-2 py-1 text-xs font-semibold text-red-700 bg-red-200 rounded">
+                        Low
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="mt-4 flex items-center gap-2 text-green-600">
+                  <CheckCircle className="text-green-500" />
+                  <p className="font-medium">
+                    All stock levels are sufficient.
+                  </p>
+                </div>
+              )}
+            </Card>
+          )}
           <Card className="max-sm:p-0 p-0">
             {salesDataLoading ? (
               <div className="flex justify-center items-center py-5">

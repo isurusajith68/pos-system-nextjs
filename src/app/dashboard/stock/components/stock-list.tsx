@@ -31,7 +31,8 @@ export default function StockList({
           <TableRow>
             <TableHead>Ingredient Name</TableHead>
             <TableHead>Category</TableHead>
-            <TableHead>Current Quantity</TableHead>
+            <TableHead> Quantity</TableHead>
+            <TableHead>Minimum Stock Level</TableHead>
             <TableHead>Unit</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Last Updated</TableHead>
@@ -46,7 +47,7 @@ export default function StockList({
               </TableCell>
               <TableCell>{stock.category}</TableCell>
               <TableCell>{stock.currentQuantity}</TableCell>
-
+              <TableCell>{stock.minimumStockLevel}</TableCell>
               <TableCell>{stock.unitOfMeasurement}</TableCell>
               <TableCell>
                 <StockStatus
