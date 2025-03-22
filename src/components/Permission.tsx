@@ -180,7 +180,7 @@ const Permission = () => {
   return (
     <div>
       {permissions && isLoadingSelectedRolePermissions && (
-        <div className="absolute top-0 left-0 z-50 flex items-center justify-center w-full h-full bg-white bg-opacity-50">
+        <div className="absolute top-0 left-0 z-50 flex items-center justify-center w-full h-full bg-white dark:bg-black bg-opacity-50 dark:bg-opacity-50">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       )}
