@@ -649,7 +649,7 @@ const MenuPage = () => {
                           >
                             <div className="relative h-32 overflow-hidden">
                               <div className="flex justify-center item-center">
-                                <img
+                                <Image
                                   src={
                                     product.image
                                       ? product.image
