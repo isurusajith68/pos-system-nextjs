@@ -78,10 +78,7 @@ export const getPermissions = async () => {
   const db = await connectToDatabase();
   const permissions = await db.collection("permissions").findOne({});
 
-  console.log(permissions);
-
   delete permissions._id;
-
   return permissions;
 };
 
@@ -110,6 +107,5 @@ export const getRolePermissions = async (role) => {
   }
 
   delete permissions._id;
-
   return permissions;
 };

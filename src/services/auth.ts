@@ -72,7 +72,6 @@ export const getUserFromCookie = async () => {
         { _id: new ObjectId(decoded.userId) },
         { projection: { password: 0, _id: 0 } }
       );
-    console.log(user);
     if (!user) {
       return null;
     }
@@ -187,7 +186,6 @@ export const getAllUsers = async () => {
     users.sort((a, b) => {
       return a.created_at > b.created_at ? -1 : 1;
     });
-
     return { success: true, users };
   } catch (error) {
     return { success: false, message: "Server error, please try again later" };

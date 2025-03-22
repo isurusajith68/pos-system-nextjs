@@ -82,7 +82,6 @@ const Permission = () => {
           methods.getValues("role")
         );
         setSelectedRolePermissions(rolePermissions);
-        console.log(rolePermissions);
         setIsLoadingSelectedRolePermissions(false);
       } catch (error) {
         setIsLoadingSelectedRolePermissions(false);
@@ -107,7 +106,6 @@ const Permission = () => {
       }
 
       const permissions = selectedRolePermissions.permissions || {};
-      console.log(permissions, "permissions");
 
       methods.setValue(
         "permissions",
@@ -125,7 +123,6 @@ const Permission = () => {
   }, [selectedRolePermissions]);
 
   const onSubmit = async (data: any) => {
-    console.log(data, "data");
     try {
       const result = await addRolePermissions(data);
 

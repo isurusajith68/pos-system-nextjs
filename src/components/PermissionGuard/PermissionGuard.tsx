@@ -17,7 +17,6 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   screen = false,
 }) => {
   const { permissions } = usePermissionStore();
-  console.log(permissions);
 
   if (action === "view_bills") {
     const dailyBillPermission =
@@ -33,7 +32,6 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   }
 
   const hasPermission = permissions?.[module]?.actions?.[action] ?? false;
-  console.log(hasPermission);
   if (!hasPermission) {
     return screen ? <PermissionDenied /> : null;
   }

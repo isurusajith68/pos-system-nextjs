@@ -49,7 +49,6 @@ const Layout = ({ children }: LayoutProps) => {
       setIsLoading(true);
       try {
         const user = await getUserFromCookie();
-        // console.log(user);
         if (!user) {
           router.push("/");
           setIsLoading(false);
@@ -66,7 +65,7 @@ const Layout = ({ children }: LayoutProps) => {
       }
     };
 
-    savePermissions();
+    // savePermissions();
     if (!user) {
       loadUser();
     }

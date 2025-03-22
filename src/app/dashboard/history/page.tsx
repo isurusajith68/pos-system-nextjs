@@ -114,7 +114,7 @@ const BillHistoryPage = () => {
     if (permissions?.billing?.actions?.view_all_bills) {
       fetchBills();
     }
-    console.log(permissions?.billing?.actions?.view_daily_bills);
+   
     if (permissions?.billing?.actions?.view_daily_bills) {
       fetchDailyBills();
     }
