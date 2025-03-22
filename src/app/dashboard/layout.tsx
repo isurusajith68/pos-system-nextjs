@@ -3,13 +3,12 @@
 import NavBar from "@/components/NavBar";
 import Sidebar from "@/components/Sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import React, { Suspense, useEffect, useRef } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useScrollStore } from "@/store/useScrollRef";
 import { getUserFromCookie } from "@/services/auth";
-import { redirect } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
-import { getRolePermissions, savePermissions } from "@/services/permission";
+import { getRolePermissions } from "@/services/permission";
 import { usePermissionStore } from "@/store/usePremissionStore";
 import { Loader2 } from "lucide-react";
 
@@ -21,10 +20,11 @@ const Layout = ({ children }: LayoutProps) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const { setScrollRef } = useScrollStore();
   const { setUser, user } = useAuthStore();
-  const [isLoading, setIsLoading] = React.useState(true);
   const { setPermissions } = usePermissionStore();
-  const [isLoadingPermission, setIsLoadingPermission] = React.useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPermission, setIsLoadingPermission] = useState(true);
   const router = useRouter();
+
   useEffect(() => {
     if (scrollRef.current) {
       setScrollRef(scrollRef);
@@ -42,6 +42,18 @@ const Layout = ({ children }: LayoutProps) => {
       element.addEventListener("paste", (e) => e.preventDefault());
       element.addEventListener("drop", (e) => e.preventDefault());
     });
+
+    return () => {
+      noSelectElements.forEach((element) => {
+        element.removeEventListener("selectstart", (e) => e.preventDefault());
+        element.removeEventListener("dragstart", (e) => e.preventDefault());
+        element.removeEventListener("contextmenu", (e) => e.preventDefault());
+        element.removeEventListener("copy", (e) => e.preventDefault());
+        element.removeEventListener("cut", (e) => e.preventDefault());
+        element.removeEventListener("paste", (e) => e.preventDefault());
+        element.removeEventListener("drop", (e) => e.preventDefault());
+      });
+    };
   }, []);
 
   useEffect(() => {
@@ -51,56 +63,50 @@ const Layout = ({ children }: LayoutProps) => {
         const user = await getUserFromCookie();
         if (!user) {
           router.push("/");
-          setIsLoading(false);
           return;
         }
         setUser(user);
-
-        setIsLoading(false);
       } catch (error) {
+        console.error("Error loading user:", error);
         router.push("/");
-        setIsLoading(false);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // savePermissions();
     if (!user) {
       loadUser();
+    } else {
+      setIsLoading(false);
     }
-  }, []);
+  }, [user, setUser, router]);
 
   useEffect(() => {
-    setIsLoadingPermission(true);
-    const loadPermissions = async (role: string) => {
-      try {
-        const permissions = await getRolePermissions(role);
-        setPermissions(permissions?.permissions);
+    const loadPermissions = async () => {
+      if (!user) {
         setIsLoadingPermission(false);
+        return;
+      }
+
+      setIsLoadingPermission(true);
+      try {
+        const permissions = await getRolePermissions(user.role);
+        setPermissions(permissions?.permissions || []);
       } catch (error) {
-        console.error(error);
+        console.error("Error loading permissions:", error);
+      } finally {
         setIsLoadingPermission(false);
       }
     };
 
-    if (user) {
-      loadPermissions(user.role);
-    } else {
-      setIsLoadingPermission(false);
-    }
-  }, [user]);
+    loadPermissions();
+  }, [user, setPermissions]);
 
   return (
     <div className="flex sm:h-screen flex-col h-dvh no-select">
       {isLoading || isLoadingPermission ? (
         <div className="flex items-center justify-center h-full w-full">
-          <Loader2
-            size={48}
-            className="
-          text-primary animate-spin
-          "
-          />
+          <Loader2 size={48} className="text-primary animate-spin" />
         </div>
       ) : (
         <>
