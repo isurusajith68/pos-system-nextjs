@@ -130,9 +130,7 @@ export default function StockList({
                         module="stock_management"
                         action="edit_stock"
                       >
-                        <Button variant="ghost" size="icon">
-                          <EditStockForm stockData={stock} />
-                        </Button>
+                        <EditStockForm stockData={stock} />
                       </PermissionGuard>
                       <PermissionGuard
                         module="stock_management"

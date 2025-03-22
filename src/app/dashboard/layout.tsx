@@ -89,7 +89,7 @@ const Layout = ({ children }: LayoutProps) => {
     } else {
       setIsLoadingPermission(false);
     }
-  }, []);
+  }, [user]);
 
   return (
     <div className="flex sm:h-screen flex-col h-dvh no-select">
