@@ -32,7 +32,6 @@ export const getCash = async ({ date }: { date: string }) => {
   const db = await connectToDatabase();
 
   const formattedDate = new Date(date).toLocaleDateString().split("T")[0];
-  console.log(formattedDate);
   const cash = await db.collection("cash").findOne({ date: formattedDate });
   if (!cash) {
     return {

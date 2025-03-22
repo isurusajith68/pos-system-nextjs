@@ -56,6 +56,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import PermissionGuard from "@/components/PermissionGuard/PermissionGuard";
 
 const MenuPage = () => {
   const { categories, setCategories, loading, setLoading } = useCategoryStore();
@@ -487,7 +488,6 @@ const MenuPage = () => {
       cart,
     });
 
-    console.log(result);
     if (result.success) {
       toast({
         title: "Bill added",
@@ -518,173 +518,176 @@ const MenuPage = () => {
   return (
     <div className="container mx-auto border-none ring-0 max-w-full sm:p-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3 xl:col-span-3">
-          <Card
-            className={`backdrop-blur-sm shadow-xl transition-all duration-300 `}
-          >
-            <CardHeader className="border-b py-2 bg-background">
-              <div className="flex items-center justify-between max-sm:flex-col">
-                <CardTitle className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  Menu
-                </CardTitle>
-                <div className="flex items-center gap-4">
-                  <Input
-                    type="text"
-                    placeholder="Search item code or name (S)"
-                    className="w-64 mt-2 max-sm:w-full focus-visible:ring-2"
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setSelectedProductIndex(-1);
-                    }}
-                    ref={searchInputRef}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        searchInputRef.current?.blur();
-                      }
-                    }}
-                  />
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="hover:bg-primary/10"
-                      >
-                        <Keyboard className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Keyboard Shortcuts</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid grid-cols-2 gap-4">
-                        {shortcuts.map((shortcut) => (
-                          <div
-                            key={shortcut.key}
-                            className="flex items-center gap-2"
-                          >
-                            <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">
-                              {shortcut.key}
-                            </kbd>
-                            <span className="text-sm">
-                              {shortcut.description}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                <UtensilsCrossed className="h-8 w-8 text-primary opacity-80 max-sm:hidden" />
-              </div>
-
-              <div className="flex gap-3 flex-wrap px-2">
-                <Badge
-                  variant={selectedCategory === null ? "default" : "outline"}
-                  className="cursor-pointer hover:scale-105 transition-all duration-200 px-4 py-2"
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  All Items
-                </Badge>
-                {categories.map((category) => (
-                  <Badge
-                    key={category._id}
-                    variant={
-                      selectedCategory === category.name ? "default" : "outline"
-                    }
-                    className="cursor-pointer hover:scale-105 transition-all duration-200 flex items-center gap-2 px-4 py-2 capitalize "
-                    onClick={() => setSelectedCategory(category.name)}
-                  >
-                    <Image
-                      src={category.image || "/placeholder.jpg"}
-                      alt={category.name}
-                      width={24}
-                      height={24}
-                      className="w-6 h-6 rounded-full object-cover"
+        <PermissionGuard module="menu" action="view_menu">
+          <div className="lg:col-span-3 xl:col-span-3">
+            <Card
+              className={`backdrop-blur-sm shadow-xl transition-all duration-300 `}
+            >
+              <CardHeader className="border-b py-2 bg-background">
+                <div className="flex items-center justify-between max-sm:flex-col">
+                  <CardTitle className="text-xl text-left font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    Menu
+                  </CardTitle>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      type="text"
+                      placeholder="Search item code or name (S)"
+                      className="w-64 mt-2 max-sm:w-full focus-visible:ring-2"
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setSelectedProductIndex(-1);
+                      }}
+                      ref={searchInputRef}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          searchInputRef.current?.blur();
+                        }
+                      }}
                     />
-                    {category.name}
-                  </Badge>
-                ))}
-              </div>
-              <ScrollBar orientation="horizontal" />
-            </CardHeader>
-
-            <CardContent className="p-6">
-              <ScrollArea className="h-[calc(100vh-280px)]">
-                {loadingProducts ? (
-                  <div className="flex justify-center items-center py-5">
-                    <Loader className="h-6 w-6 text-primary animate-spin" />
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4  gap-6">
-                    {filteredProductsByCategoryAndSearch.map(
-                      (product, index) => (
-                        <Card
-                          key={product._id}
-                          ref={
-                            index === selectedProductIndex
-                              ? selectedProductRef
-                              : null
-                          }
-                          className={`overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer ${
-                            selectedProductIndex === index
-                              ? "border-2 border-primary"
-                              : ""
-                          } `}
-                          style={{
-                            backgroundColor: "rgba(0, 255, 0, 0.1)",
-                          }}
-                          onClick={() => {
-                            setSelectedProductIndex(index);
-                            addToCart({
-                              id: product._id,
-                              name: product.name,
-                              price: product.price,
-                              ingredients: product.ingredients,
-                            });
-                          }}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="hover:bg-primary/10"
                         >
-                          <div className="relative h-32 overflow-hidden">
-                            <div className="flex justify-center item-center">
-                              <img
-                                src={
-                                  product.image
-                                    ? product.image
-                                    : "/placeholder.jpg"
-                                }
-                                alt={product.name}
-                                width={100}
-                                height={100}
-                                className="object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
-                            </div>
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                            <Badge
-                              variant="secondary"
-                              className="absolute top-3 right-3 dark:bg-white/90 text-primary-foreground bg-black/90 backdrop-blur-sm"
+                          <Keyboard className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Keyboard Shortcuts</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid grid-cols-2 gap-4">
+                          {shortcuts.map((shortcut) => (
+                            <div
+                              key={shortcut.key}
+                              className="flex items-center gap-2"
                             >
-                              {product.category}
-                            </Badge>
-                          </div>
-                          <CardContent className="p-4">
-                            <h3 className="font-semibold text-lg mb-1 capitalize max-w-full break-words whitespace-normal">
-                              {product.name}{" "}
-                              <span className="text-muted-foreground text-xs ml-2">
-                                ({product.itemCode})
+                              <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">
+                                {shortcut.key}
+                              </kbd>
+                              <span className="text-sm">
+                                {shortcut.description}
                               </span>
-                            </h3>
+                            </div>
+                          ))}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  <UtensilsCrossed className="h-8 w-8 text-primary opacity-80 max-sm:hidden" />
+                </div>
 
-                            <div className="flex justify-between items-center mb-4">
-                              <div className="text-lg font-bold text-destructive dark:text-red-500">
-                                <p className="font-bold text-lg ">
-                                  Rs{" "}
-                                  {parseFloat(product.price.toString()).toFixed(
-                                    2
-                                  )}
-                                </p>
+                <div className="flex gap-3 flex-wrap px-2">
+                  <Badge
+                    variant={selectedCategory === null ? "default" : "outline"}
+                    className="cursor-pointer hover:scale-105 transition-all duration-200 px-4 py-2"
+                    onClick={() => setSelectedCategory(null)}
+                  >
+                    All Items
+                  </Badge>
+                  {categories.map((category) => (
+                    <Badge
+                      key={category._id}
+                      variant={
+                        selectedCategory === category.name
+                          ? "default"
+                          : "outline"
+                      }
+                      className="cursor-pointer hover:scale-105 transition-all duration-200 flex items-center gap-2 px-4 py-2 capitalize "
+                      onClick={() => setSelectedCategory(category.name)}
+                    >
+                      <Image
+                        src={category.image || "/placeholder.jpg"}
+                        alt={category.name}
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                      {category.name}
+                    </Badge>
+                  ))}
+                </div>
+                <ScrollBar orientation="horizontal" />
+              </CardHeader>
+
+              <CardContent className="p-6">
+                <ScrollArea className="h-[calc(100vh-280px)]">
+                  {loadingProducts ? (
+                    <div className="flex justify-center items-center py-5">
+                      <Loader className="h-6 w-6 text-primary animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4  gap-6">
+                      {filteredProductsByCategoryAndSearch.map(
+                        (product, index) => (
+                          <Card
+                            key={product._id}
+                            ref={
+                              index === selectedProductIndex
+                                ? selectedProductRef
+                                : null
+                            }
+                            className={`overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer ${
+                              selectedProductIndex === index
+                                ? "border-2 border-primary"
+                                : ""
+                            } `}
+                            style={{
+                              backgroundColor: "rgba(0, 255, 0, 0.1)",
+                            }}
+                            onClick={() => {
+                              setSelectedProductIndex(index);
+                              addToCart({
+                                id: product._id,
+                                name: product.name,
+                                price: product.price,
+                                ingredients: product.ingredients,
+                              });
+                            }}
+                          >
+                            <div className="relative h-32 overflow-hidden">
+                              <div className="flex justify-center item-center">
+                                <img
+                                  src={
+                                    product.image
+                                      ? product.image
+                                      : "/placeholder.jpg"
+                                  }
+                                  alt={product.name}
+                                  width={100}
+                                  height={100}
+                                  className="object-cover group-hover:scale-110 transition-transform duration-300"
+                                />
                               </div>
-                              {/* {product.stock >= 0 && product.stock !== null && (
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                              <Badge
+                                variant="secondary"
+                                className="absolute top-3 right-3 dark:bg-white/90 text-primary-foreground bg-black/90 backdrop-blur-sm"
+                              >
+                                {product.category}
+                              </Badge>
+                            </div>
+                            <CardContent className="p-4">
+                              <h3 className="font-semibold text-lg mb-1 capitalize max-w-full break-words whitespace-normal">
+                                {product.name}{" "}
+                                <span className="text-muted-foreground text-xs ml-2">
+                                  ({product.itemCode})
+                                </span>
+                              </h3>
+
+                              <div className="flex justify-between items-center mb-4">
+                                <div className="text-lg font-bold text-destructive dark:text-red-500">
+                                  <p className="font-bold text-lg ">
+                                    Rs{" "}
+                                    {parseFloat(
+                                      product.price.toString()
+                                    ).toFixed(2)}
+                                  </p>
+                                </div>
+                                {/* {product.stock >= 0 && product.stock !== null && (
                                 <>
                                   <Badge
                                     variant="outline"
@@ -700,217 +703,223 @@ const MenuPage = () => {
                                   </Badge>
                                 </>
                               )} */}
-                            </div>
-                            <Button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart({
-                                  id: product._id,
-                                  name: product.name,
-                                  price: product.price,
-                                  ingredients: product.ingredients,
-                                });
-                              }}
-                              className="w-full bg-primary hover:bg-primary/90 group-hover:scale-105 transition-transform"
-                            >
-                              Add to Bill
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      )
-                    )}
-                  </div>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
-        <Card className="w-full max-w-xs mx-auto">
-          <div className="flex justify-between items-center p-4 gap-2">
-            <div>
-              <span className="text-xs">Customer paid (C)</span>
-              <Input
-                placeholder="amount_given"
-                type="number"
-                ref={cashInputRef}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value) && value >= 0) {
-                    setCashAmount(value);
-                  }
-                  if (e.target.value.length === 0) {
-                    setCashAmount(0);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    cashInputRef.current?.blur();
-                  }
-                }}
-                className="focus-visible:ring-2"
-              />
-            </div>
-
-            <div>
-              <span className="text-xs">Discount (D)</span>
-              <Input
-                placeholder="discount"
-                type="number"
-                ref={discountInputRef}
-                onChange={(e) => {
-                  let value = parseFloat(e.target.value);
-
-                  if (value > 100) {
-                    value = 100;
-                  }
-
-                  if (e.target.value === "" || isNaN(value)) {
-                    value = 0;
-                  }
-
-                  setDiscount(value);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    discountInputRef.current?.blur();
-                  }
-                }}
-                className="focus-visible:ring-2"
-              />
-            </div>
+                              </div>
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  addToCart({
+                                    id: product._id,
+                                    name: product.name,
+                                    price: product.price,
+                                    ingredients: product.ingredients,
+                                  });
+                                }}
+                                className="w-full bg-primary hover:bg-primary/90 group-hover:scale-105 transition-transform"
+                              >
+                                Add to Bill
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        )
+                      )}
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
           </div>
-          <ScrollArea className="h-[calc(100vh-450px)] border" ref={contentRef}>
-            <CardContent className="p-2">
-              <div className="space-y-2">
-                {cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between items-center"
-                  >
-                    <div>
-                      <p className="font-medium max-w-32 break-words whitespace-normal">
-                        {item.name}
-                      </p>
-                      <span className="text-sm text-muted-foreground">
-                        Rs {parseFloat(item.price.toString()).toFixed(2)} x{" "}
-                        {item.quantity}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => removeFromCart(item.id)}
-                        className="h-8 w-8 rounded-full hover:bg-destructive/10"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <span className="w-8 text-center">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() =>
-                          addToCart({
-                            ...item,
-                            ingredients: item.ingredients || [],
-                          })
-                        }
-                        className="h-8 w-8 rounded-full hover:bg-primary/10"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                {cart.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <p className="text-muted-foreground">
-                      No items in the cart
-                    </p>
-                  </div>
-                )}
+        </PermissionGuard>
+        <PermissionGuard module="menu" action="print_bill">
+          <Card className="w-full max-w-xs mx-auto">
+            <div className="flex justify-between items-center p-4 gap-2">
+              <div>
+                <span className="text-xs">Customer paid (C)</span>
+                <Input
+                  placeholder="amount_given"
+                  type="number"
+                  ref={cashInputRef}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    if (!isNaN(value) && value >= 0) {
+                      setCashAmount(value);
+                    }
+                    if (e.target.value.length === 0) {
+                      setCashAmount(0);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      cashInputRef.current?.blur();
+                    }
+                  }}
+                  className="focus-visible:ring-2"
+                />
               </div>
-            </CardContent>
-          </ScrollArea>
-          <Separator className="" />
-          <div className="space-y-2 p-2">
-            <div className="flex justify-between">
-              <p>Subtotal:</p>
-              <p>Rs {totalBill.toFixed(2)}</p>
+
+              <div>
+                <span className="text-xs">Discount (D)</span>
+                <Input
+                  placeholder="discount"
+                  type="number"
+                  ref={discountInputRef}
+                  onChange={(e) => {
+                    let value = parseFloat(e.target.value);
+
+                    if (value > 100) {
+                      value = 100;
+                    }
+
+                    if (e.target.value === "" || isNaN(value)) {
+                      value = 0;
+                    }
+
+                    setDiscount(value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      discountInputRef.current?.blur();
+                    }
+                  }}
+                  className="focus-visible:ring-2"
+                />
+              </div>
             </div>
-            <div className="flex justify-between">
-              <p>Discount:</p>
-              <p>{discount}%</p>
-            </div>
-            <div className="flex justify-between">
-              <p>Total:</p>
-              <p className="font-bold">
-                Rs {(totalBill - discountAmount).toFixed(2)}
-              </p>
-            </div>
-            <Separator className="my-2" />
-            <div className="flex justify-between">
-              <p>Cash:</p>
-              <p>Rs {cashAmount.toFixed(2)}</p>
-            </div>
-            <div className="flex justify-between">
-              <p>Change:</p>
-              <p>Rs {cashAmount ? changeAmount.toFixed(2) : "0.00"}</p>
-            </div>
-          </div>
-          <div className="p-2 space-y-2">
-            <AlertDialog>
-              <AlertDialogTrigger asChild ref={alertDialogRef}>
-                <Button className="w-full hover:bg-primary/90 transition-colors">
-                  <Printer className="mr-2 h-4 w-4" /> Print Bill (P)
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will clear the cart and
-                    close the menu.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => {
-                      printBill({
-                        date: date,
-                        time: time,
-                        totalBill: parseFloat(
-                          (totalBill - discountAmount).toFixed(2)
-                        ),
-                        subTotal: totalBill,
-                        cashAmount: cashAmount,
-                        changeAmount: changeAmount,
-                        discount: discount,
-                        discountAmount: discountAmount,
-                        cart: cart,
-                      });
-                    }}
-                    ref={printRef}
-                  >
-                    Print Bill (Space)
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            <Button
-              variant="destructive"
-              className="w-full hover:bg-destructive/90 transition-colors"
-              onClick={() =>
-                clearCart({
-                  stock: true,
-                })
-              }
+            <ScrollArea
+              className="h-[calc(100vh-450px)] border"
+              ref={contentRef}
             >
-              Clear Cart (Esc)
-            </Button>
-          </div>
-        </Card>
+              <CardContent className="p-2">
+                <div className="space-y-2">
+                  {cart.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex justify-between items-center"
+                    >
+                      <div>
+                        <p className="font-medium max-w-32 break-words whitespace-normal">
+                          {item.name}
+                        </p>
+                        <span className="text-sm text-muted-foreground">
+                          Rs {parseFloat(item.price.toString()).toFixed(2)} x{" "}
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => removeFromCart(item.id)}
+                          className="h-8 w-8 rounded-full hover:bg-destructive/10"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() =>
+                            addToCart({
+                              ...item,
+                              ingredients: item.ingredients || [],
+                            })
+                          }
+                          className="h-8 w-8 rounded-full hover:bg-primary/10"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {cart.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <p className="text-muted-foreground">
+                        No items in the cart
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </ScrollArea>
+            <Separator className="" />
+            <div className="space-y-2 p-2">
+              <div className="flex justify-between">
+                <p>Subtotal:</p>
+                <p>Rs {totalBill.toFixed(2)}</p>
+              </div>
+              <div className="flex justify-between">
+                <p>Discount:</p>
+                <p>{discount}%</p>
+              </div>
+              <div className="flex justify-between">
+                <p>Total:</p>
+                <p className="font-bold">
+                  Rs {(totalBill - discountAmount).toFixed(2)}
+                </p>
+              </div>
+              <Separator className="my-2" />
+              <div className="flex justify-between">
+                <p>Cash:</p>
+                <p>Rs {cashAmount.toFixed(2)}</p>
+              </div>
+              <div className="flex justify-between">
+                <p>Change:</p>
+                <p>Rs {cashAmount ? changeAmount.toFixed(2) : "0.00"}</p>
+              </div>
+            </div>
+            <div className="p-2 space-y-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild ref={alertDialogRef}>
+                  <Button className="w-full hover:bg-primary/90 transition-colors">
+                    <Printer className="mr-2 h-4 w-4" /> Print Bill (P)
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will clear the cart and
+                      close the menu.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => {
+                        printBill({
+                          date: date,
+                          time: time,
+                          totalBill: parseFloat(
+                            (totalBill - discountAmount).toFixed(2)
+                          ),
+                          subTotal: totalBill,
+                          cashAmount: cashAmount,
+                          changeAmount: changeAmount,
+                          discount: discount,
+                          discountAmount: discountAmount,
+                          cart: cart,
+                        });
+                      }}
+                      ref={printRef}
+                    >
+                      Print Bill (Space)
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button
+                variant="destructive"
+                className="w-full hover:bg-destructive/90 transition-colors"
+                onClick={() =>
+                  clearCart({
+                    stock: true,
+                  })
+                }
+              >
+                Clear Cart (Esc)
+              </Button>
+            </div>
+          </Card>
+        </PermissionGuard>
       </div>
     </div>
   );

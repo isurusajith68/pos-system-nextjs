@@ -19,7 +19,6 @@ import { usePathname } from "next/navigation";
 const Sidebar = () => {
   const path = usePathname();
 
-  console.log(path, "path");
 
   const menuItems = [
     {

@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/form";
 import Link from "next/link";
 import { Ingredient } from "@/store/useCategoryStore";
+import PermissionGuard from "@/components/PermissionGuard/PermissionGuard";
 
 const stockActivitySchema = z.object({
   ingredientName: z.string().min(1, "Ingredient is required"),
@@ -68,7 +69,6 @@ interface ActivityWithTimestamp extends StockActivityFormData {
 const StockActivity = () => {
   const [activities, setActivities] = useState<ActivityWithTimestamp[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  console.log(ingredients);
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<StockActivityFormData>({
@@ -163,115 +163,97 @@ const StockActivity = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Stock Activity</h2>
+    <div className=" mx-auto sm:p-4 ">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h2 className="text-lg sm:text-xl font-bold">Stock Activity</h2>
         <Link href="/dashboard/stock">
-          <Button variant="outline">Back to Stock</Button>
+          <Button variant="outline" className="w-full sm:w-auto">
+            Back to Stock
+          </Button>
         </Link>
       </div>
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">
-              Log Stock Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="ingredientName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ingredient</FormLabel>
-                      <FormControl>
-                        <Select
-                          disabled={isLoading}
-                          onValueChange={handleIngredientChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select ingredient" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white border border-gray-300 rounded-md shadow-lg">
-                            {ingredients.map((ingredient, index) => (
-                              <SelectItem
-                                key={index}
-                                value={ingredient.ingredientName}
-                              >
-                                <span className="font-medium text-gray-900">
-                                  {ingredient.ingredientName}
-                                </span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="activityType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Activity Type</FormLabel>
-                      <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select activity type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Added">Added</SelectItem>
-                            <SelectItem value="Removed">Removed</SelectItem>
-                            <SelectItem value="Used in Sale">
-                              Used in Sale
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <PermissionGuard module="stock_management" action="add_activity">
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle className="text-xl sm:text-2xl font-bold">
+                Log Stock Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
                   <FormField
                     control={form.control}
-                    name="quantity"
+                    name="ingredientName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Quantity</FormLabel>
+                        <FormLabel>Ingredient</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(parseFloat(e.target.value))
-                            }
-                          />
+                          <Select
+                            disabled={isLoading}
+                            onValueChange={handleIngredientChange}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select ingredient" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border border-gray-300 rounded-md shadow-lg">
+                              {ingredients.map((ingredient, index) => (
+                                <SelectItem
+                                  key={index}
+                                  value={ingredient.ingredientName}
+                                >
+                                  <span className="font-medium text-gray-900">
+                                    {ingredient.ingredientName}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  {form.watch("activityType") === "Added" && (
+
+                  <FormField
+                    control={form.control}
+                    name="activityType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Activity Type</FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select activity type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Added">Added</SelectItem>
+                              <SelectItem value="Removed">Removed</SelectItem>
+                              <SelectItem value="Used in Sale">
+                                Used in Sale
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="price"
+                      name="quantity"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Price</FormLabel>
+                          <FormLabel>Quantity</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -280,87 +262,133 @@ const StockActivity = () => {
                               onChange={(e) =>
                                 field.onChange(parseFloat(e.target.value))
                               }
+                              className="w-full"
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  )}
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="note"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Note (Optional)</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Add a note..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  Log Activity
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Activity Log</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ingredient</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activities.map((activity, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="text-xs font-bold">
-                      {activity.ingredientName}
-                    </TableCell>
-                    <TableCell className="flex items-center text-xs gap-2">
-                      {getActivityIcon(activity.activityType)}
-                      {activity.activityType}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {activity.quantity}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      Rs {activity.price.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {activity.timestamp}
-                    </TableCell>
-                    <TableCell>
-                      <Trash2
-                        className="w-4 h-4 text-red-500 cursor-pointer"
-                        onClick={async () => {
-                          await deleteStockTransaction(activity._id);
-                          fetchStockActivities();
-                        }}
+                    {form.watch("activityType") === "Added" && (
+                      <FormField
+                        control={form.control}
+                        name="price"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Price</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(parseFloat(e.target.value))
+                                }
+                                className="w-full"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                    )}
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="note"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Note (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Add a note..."
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    className="w-full sm:w-auto"
+                    disabled={isLoading}
+                  >
+                    Log Activity
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </PermissionGuard>
+        <PermissionGuard module="stock_management" action="view_activity">
+          <Card className="overflow-hidden">
+            <CardHeader>
+              <CardTitle className="text-xl sm:text-2xl font-bold">
+                Activity Log
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 sm:p-6">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ingredient</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead className="hidden sm:table-cell">
+                        Timestamp
+                      </TableHead>
+                      <TableHead></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {activities.map((activity, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="text-xs font-bold">
+                          {activity.ingredientName}
+                        </TableCell>
+                        <TableCell className="flex items-center text-xs gap-2">
+                          {getActivityIcon(activity.activityType)}
+                          <span className="hidden sm:inline">
+                            {activity.activityType}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {activity.quantity}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          Rs {activity.price.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-xs">
+                          {activity.timestamp}
+                        </TableCell>
+                        <TableCell>
+                          <PermissionGuard
+                            module="stock_management"
+                            action="delete_activity"
+                          >
+                            <Trash2
+                              className="w-4 h-4 text-red-500 cursor-pointer"
+                              onClick={async () => {
+                                await deleteStockTransaction(activity._id);
+                                fetchStockActivities();
+                              }}
+                            />
+                          </PermissionGuard>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </PermissionGuard>
       </div>
     </div>
   );

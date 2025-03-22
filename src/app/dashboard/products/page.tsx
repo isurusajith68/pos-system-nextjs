@@ -67,6 +67,7 @@ import { useScrollStore } from "@/store/useScrollRef";
 import { scrollToTop } from "@/components/scrollToTop";
 import { Badge } from "@/components/ui/badge";
 import { getAllIngredientsNames } from "@/services/stock";
+import PermissionGuard from "@/components/PermissionGuard/PermissionGuard";
 
 const formSchema = z.object({
   productName: z
@@ -326,7 +327,6 @@ export default function ProductManagement() {
   useEffect(() => {
     const fetchIngredients = async () => {
       const data = await getAllIngredientsNames();
-      console.log(data);
       setIngredients(data);
       setIsLoading(false);
     };
@@ -389,7 +389,6 @@ export default function ProductManagement() {
       ...product,
       price: parseFloat(product.price.toString()),
     });
-    console.log(product);
     form.setValue("productName", product.name);
     form.setValue("itemCode", product.itemCode);
     form.setValue("price", product.price.toString());
@@ -489,435 +488,463 @@ export default function ProductManagement() {
     >
       <h1 className="text-xl font-bold text-primary mb-6">Products</h1>
       <div className=" grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              {editingProduct ? "Edit Product" : "Add Product"}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="bg-primary p-1 rounded-full text-secondary">
-                      <RiResetRightLine
-                        onClick={handleReset}
-                        className={`h-6 w-6 cursor-pointer ${
-                          spinning ? "animate-spin" : ""
-                        }`}
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" align="center" sideOffset={16}>
-                    <p>Reset</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="">
-            {loadingCategories ? (
-              <div className="flex justify-center items-center py-5">
-                <Loader className="h-6 w-6 text-primary animate-spin" />
-              </div>
-            ) : (
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
-                  <FormField
-                    control={form.control}
-                    name="productName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Product Name
-                          <span className="text-red-500 ml-1">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter product name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="itemCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Item Code
-                          <span className="text-red-500 ml-1">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter product stock" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Price
-                          <span className="text-red-500 ml-1">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Enter product price"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Category
-                          <span className="text-red-500 ml-1">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((category) => (
-                                <SelectItem
-                                  key={category._id}
-                                  value={category.name}
-                                >
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button type="button" onClick={handleAddIngredient}>
-                    Add Ingredients
-                  </Button>
-
-                  <table className="w-full border-collapse border border-gray-300 mt-4">
-                    <thead>
-                      <tr className="bg-gray-200">
-                        <th className="border border-gray-300 px-4 py-2 text-xs">
-                          Ingredient
-                        </th>
-                        <th className="border border-gray-300 px-4 py-2 text-xs">
-                          Unit
-                        </th>
-                        <th className="border border-gray-300 px-4 py-2 text-xs">
-                          Quantity per product
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {form.watch("ingredients")?.map((_, index) => (
-                        <tr key={index}>
-                          <td className="border border-gray-300 px-4 py-2">
-                            <FormField
-                              control={form.control}
-                              name={`ingredients.${index}.ingredientName`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <Select
-                                    disabled={isLoading}
-                                    onValueChange={(value) => {
-                                      console.log(value);
-                                      handleIngredientChange(value, index);
-
-                                      field.onChange(value);
-                                    }}
-                                    value={form.watch(
-                                      `ingredients.${index}.ingredientName`
-                                    )}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select ingredient" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white border border-gray-300 rounded-md shadow-lg">
-                                      {ingredientsAll.map((ingredient, idx) => (
-                                        <SelectItem
-                                          key={idx}
-                                          value={
-                                            ingredient.ingredientName || ""
-                                          }
-                                        >
-                                          {ingredient.ingredientName}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </FormItem>
-                              )}
-                            />
-                          </td>
-                          <td className="border border-gray-300 px-4 py-2">
-                            <FormField
-                              control={form.control}
-                              name={`ingredients.${index}._id`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <Input
-                                    {...field}
-                                    value={form.watch(
-                                      `ingredients.${index}._id`
-                                    )}
-                                    placeholder="Unit"
-                                    className="w-full hidden"
-                                    disabled
-                                  />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name={`ingredients.${index}.units`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <Input
-                                    {...field}
-                                    value={form.watch(
-                                      `ingredients.${index}.units`
-                                    )}
-                                    placeholder="Unit"
-                                    className="w-full"
-                                    disabled
-                                  />
-                                </FormItem>
-                              )}
-                            />
-                          </td>
-                          <td className="border border-gray-300 px-4 py-2">
-                            <FormField
-                              control={form.control}
-                              name={`ingredients.${index}.quantityPerProduct`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <Input
-                                    {...field}
-                                    placeholder="Quantity per product"
-                                    className="w-full"
-                                  />
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <FormField
-                    control={form.control}
-                    name="productImage"
-                    render={() => (
-                      <FormItem>
-                        <FormLabel>
-                          Product Image
-                          <span className="text-xs ml-2">(Optional)</span>
-                        </FormLabel>
-                        <FormControl>
-                          <div className="flex items-center space-x-2">
+        <PermissionGuard module="product_management" action="add_product">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                {editingProduct ? "Edit Product" : "Add Product"}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="bg-primary p-1 rounded-full text-secondary">
+                        <RiResetRightLine
+                          onClick={handleReset}
+                          className={`h-6 w-6 cursor-pointer ${
+                            spinning ? "animate-spin" : ""
+                          }`}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" align="center" sideOffset={16}>
+                      <p>Reset</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="">
+              {loadingCategories ? (
+                <div className="flex justify-center items-center py-5">
+                  <Loader className="h-6 w-6 text-primary animate-spin" />
+                </div>
+              ) : (
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-4"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="productName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Product Name
+                            <span className="text-red-500 ml-1">*</span>
+                          </FormLabel>
+                          <FormControl>
                             <Input
-                              id="productImage"
-                              type="file"
-                              onChange={handleImageUpload}
-                              className="hidden"
+                              placeholder="Enter product name"
+                              {...field}
                             />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() =>
-                                document.getElementById("productImage")?.click()
-                              }
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="itemCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Item Code
+                            <span className="text-red-500 ml-1">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter product stock"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Price
+                            <span className="text-red-500 ml-1">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="Enter product price"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Category
+                            <span className="text-red-500 ml-1">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
                             >
-                              <Upload className="mr-2 h-4 w-4" /> Upload Image
-                            </Button>
-                            {productImage && (
-                              <div className="text-sm text-muted-foreground">
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categories.map((category) => (
+                                  <SelectItem
+                                    key={category._id}
+                                    value={category.name}
+                                  >
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="button" onClick={handleAddIngredient}>
+                      Add Ingredients
+                    </Button>
+
+                    <table className="w-full border-collapse border border-gray-300  mt-4">
+                      <thead>
+                        <tr className="">
+                          <th className="border border-gray-300 px-4 py-2 text-xs">
+                            Ingredient
+                          </th>
+                          <th className="border border-gray-300 px-4 py-2 text-xs">
+                            Unit
+                          </th>
+                          <th className="border border-gray-300 px-4 py-2 text-xs">
+                            Quantity per product
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {form.watch("ingredients")?.map((_, index) => (
+                          <tr key={index}>
+                            <td className="border border-gray-300 px-4 py-2">
+                              <FormField
+                                control={form.control}
+                                name={`ingredients.${index}.ingredientName`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <Select
+                                      disabled={isLoading}
+                                      onValueChange={(value) => {
+                                        handleIngredientChange(value, index);
+
+                                        field.onChange(value);
+                                      }}
+                                      value={form.watch(
+                                        `ingredients.${index}.ingredientName`
+                                      )}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select ingredient" />
+                                      </SelectTrigger>
+                                      <SelectContent className=" border border-gray-300 rounded-md shadow-lg">
+                                        {ingredientsAll.map(
+                                          (ingredient, idx) => (
+                                            <SelectItem
+                                              key={idx}
+                                              value={
+                                                ingredient.ingredientName || ""
+                                              }
+                                            >
+                                              {ingredient.ingredientName}
+                                            </SelectItem>
+                                          )
+                                        )}
+                                      </SelectContent>
+                                    </Select>
+                                  </FormItem>
+                                )}
+                              />
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2">
+                              <FormField
+                                control={form.control}
+                                name={`ingredients.${index}._id`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <Input
+                                      {...field}
+                                      value={form.watch(
+                                        `ingredients.${index}._id`
+                                      )}
+                                      placeholder="Unit"
+                                      className="w-full hidden"
+                                      disabled
+                                    />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={form.control}
+                                name={`ingredients.${index}.units`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <Input
+                                      {...field}
+                                      value={form.watch(
+                                        `ingredients.${index}.units`
+                                      )}
+                                      placeholder="Unit"
+                                      className="w-full"
+                                      disabled
+                                    />
+                                  </FormItem>
+                                )}
+                              />
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2">
+                              <FormField
+                                control={form.control}
+                                name={`ingredients.${index}.quantityPerProduct`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <Input
+                                      {...field}
+                                      placeholder="Quantity per product"
+                                      className="w-full"
+                                    />
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <FormField
+                      control={form.control}
+                      name="productImage"
+                      render={() => (
+                        <FormItem>
+                          <FormLabel>
+                            Product Image
+                            <span className="text-xs ml-2">(Optional)</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className="flex items-center space-x-2">
+                              <Input
+                                id="productImage"
+                                type="file"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() =>
+                                  document
+                                    .getElementById("productImage")
+                                    ?.click()
+                                }
+                              >
+                                <Upload className="mr-2 h-4 w-4" /> Upload Image
+                              </Button>
+                              {productImage && (
+                                <div className="text-sm text-muted-foreground">
+                                  <Image
+                                    src={productImage}
+                                    alt="Product Image"
+                                    width={50}
+                                    height={50}
+                                    className="rounded-md"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full">
+                      {editingProduct ? "Update Product" : "Add Product"}
+                      {form.formState.isSubmitting && (
+                        <RiLoader2Fill className="animate-spin ml-2 h-4 w-4" />
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              )}
+            </CardContent>
+          </Card>
+        </PermissionGuard>
+        <PermissionGuard module="product_management" action="view_products">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle>Product List</CardTitle>
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                  <Input
+                    type="search"
+                    placeholder="Search products"
+                    className="sm:w-[200px]"
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Select
+                    onValueChange={(value) => {
+                      setSelectedCategory(value === "all" ? "" : value);
+                    }}
+                    value={selectedCategory || "all"}
+                  >
+                    <SelectTrigger className="sm:w-[180px]">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category._id} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loadingProducts ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader className="h-6 w-6 text-primary animate-spin" />
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-4 lg:hidden">
+                    {filteredProducts.map((product) => (
+                      <ProductCard key={product._id} product={product} />
+                    ))}
+                  </div>
+
+                  <div className="hidden lg:block">
+                    <div className="rounded-md border overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Product Name</TableHead>
+                            <TableHead>Item Code</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Image</TableHead>
+                            <TableHead className="text-right">
+                              Actions
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredProducts.map((product) => (
+                            <TableRow key={product._id}>
+                              <TableCell className="capitalize font-medium max-w-24 break-words whitespace-normal">
+                                {product.name}
+                              </TableCell>
+
+                              <TableCell>
+                                {!product.itemCode ? "-" : product.itemCode}
+                              </TableCell>
+
+                              <TableCell>
+                                Rs{" "}
+                                {parseFloat(product.price.toString()).toFixed(
+                                  2
+                                )}
+                              </TableCell>
+                              <TableCell className="capitalize">
+                                {product.category}
+                              </TableCell>
+                              <TableCell>
                                 <Image
-                                  src={productImage}
-                                  alt="Product Image"
+                                  src={product.image || "/placeholder.jpg"}
+                                  alt={product.name}
                                   width={50}
                                   height={50}
-                                  className="rounded-md"
+                                  className="rounded-md object-cover"
                                 />
-                              </div>
-                            )}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button type="submit" className="w-full">
-                    {editingProduct ? "Update Product" : "Add Product"}
-                    {form.formState.isSubmitting && (
-                      <RiLoader2Fill className="animate-spin ml-2 h-4 w-4" />
-                    )}
-                  </Button>
-                </form>
-              </Form>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle>Product List</CardTitle>
-              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                <Input
-                  type="search"
-                  placeholder="Search products"
-                  className="sm:w-[200px]"
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Select
-                  onValueChange={(value) => {
-                    setSelectedCategory(value === "all" ? "" : value);
-                  }}
-                  value={selectedCategory || "all"}
-                >
-                  <SelectTrigger className="sm:w-[180px]">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category._id} value={category.name}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loadingProducts ? (
-              <div className="flex justify-center items-center py-8">
-                <Loader className="h-6 w-6 text-primary animate-spin" />
-              </div>
-            ) : (
-              <>
-                <div className="grid gap-4 lg:hidden">
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product._id} product={product} />
-                  ))}
-                </div>
-
-                <div className="hidden lg:block">
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Product Name</TableHead>
-                          <TableHead>Item Code</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Image</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredProducts.map((product) => (
-                          <TableRow key={product._id}>
-                            <TableCell className="capitalize font-medium max-w-24 break-words whitespace-normal">
-                              {product.name}
-                            </TableCell>
-
-                            <TableCell>
-                              {!product.itemCode ? "-" : product.itemCode}
-                            </TableCell>
-
-                            <TableCell>
-                              Rs{" "}
-                              {parseFloat(product.price.toString()).toFixed(2)}
-                            </TableCell>
-                            <TableCell className="capitalize">
-                              {product.category}
-                            </TableCell>
-                            <TableCell>
-                              <Image
-                                src={product.image || "/placeholder.jpg"}
-                                alt={product.name}
-                                width={50}
-                                height={50}
-                                className="rounded-md object-cover"
-                              />
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                onClick={() => handleEdit(product)}
-                                variant="ghost"
-                                size="icon"
-                                className="mr-2"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="destructive" size="icon">
-                                    <Trash2 className="h-4 w-4" />
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <PermissionGuard
+                                  module="product_management"
+                                  action="edit_product"
+                                >
+                                  <Button
+                                    onClick={() => handleEdit(product)}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="mr-2"
+                                  >
+                                    <Edit className="h-4 w-4" />
                                   </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Are you absolutely sure?
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This action cannot be undone. This will
-                                      permanently delete this product.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDelete(product._id)}
-                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                                </PermissionGuard>
+                                <PermissionGuard
+                                  module="product_management"
+                                  action="delete_product"
+                                >
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="destructive" size="icon">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                          Are you absolutely sure?
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          This action cannot be undone. This
+                                          will permanently delete this product.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>
+                                          Cancel
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() =>
+                                            handleDelete(product._id)
+                                          }
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </PermissionGuard>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </PermissionGuard>
       </div>
     </div>
   );

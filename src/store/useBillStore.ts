@@ -36,7 +36,6 @@ export const useBillStore = create<BillStore>()(
     fetchBills: async () => {
       try {
         const result = await getBills();
-        console.log(result);
         if (result.success) {
           set({ billHistory: result.bills });
         } else {
@@ -49,7 +48,6 @@ export const useBillStore = create<BillStore>()(
     fetchDailyBills: async () => {
       try {
         const result = await getDailySales();
-        console.log(result);
         if (result.success) {
           set({ billHistory: result.bills });
         } else {

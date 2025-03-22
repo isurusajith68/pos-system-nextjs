@@ -24,7 +24,6 @@ export const useProductsSalesStore = create<ProductsSalesStore>()(
     fetchProductsSales: async () => {
       try {
         const result = await getProductsSales();
-        console.log(result);
         if (result.success) {
           set({ productsSales: result.productsSales });
         } else {

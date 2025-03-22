@@ -12,7 +12,7 @@ import { Label } from "@radix-ui/react-label";
 import { Input } from "./ui/input";
 
 export const Profile = ({ currentUser }) => (
-  <Card>
+  <Card className="sm:max-w-[100vw] max-w-[90%] overflow-hidden">
     <CardHeader>
       <CardTitle>Profile Settings</CardTitle>
       <CardDescription>

@@ -2,7 +2,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 export const Settings = () => (
-  <Card>
+  <Card className="sm:max-w-[100vw] max-w-[90%] overflow-hidden">
     <CardHeader>
       <CardTitle>Application Settings</CardTitle>
       <CardDescription>

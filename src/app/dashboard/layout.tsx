@@ -8,6 +8,10 @@ import { useScrollStore } from "@/store/useScrollRef";
 import { getUserFromCookie } from "@/services/auth";
 import { redirect } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useRouter } from "next/navigation";
+import { getRolePermissions, savePermissions } from "@/services/permission";
+import { usePermissionStore } from "@/store/usePremissionStore";
+import { Loader2 } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,6 +22,9 @@ const Layout = ({ children }: LayoutProps) => {
   const { setScrollRef } = useScrollStore();
   const { setUser, user } = useAuthStore();
   const [isLoading, setIsLoading] = React.useState(true);
+  const { setPermissions } = usePermissionStore();
+  const [isLoadingPermission, setIsLoadingPermission] = React.useState(true);
+  const router = useRouter();
   useEffect(() => {
     if (scrollRef.current) {
       setScrollRef(scrollRef);
@@ -42,26 +49,59 @@ const Layout = ({ children }: LayoutProps) => {
       setIsLoading(true);
       try {
         const user = await getUserFromCookie();
+        // console.log(user);
         if (!user) {
+          router.push("/");
           setIsLoading(false);
-          redirect("/");
+          return;
         }
         setUser(user);
+
         setIsLoading(false);
       } catch (error) {
-        console.error(error);
+        router.push("/");
+        setIsLoading(false);
+      } finally {
         setIsLoading(false);
       }
     };
+
+    savePermissions();
     if (!user) {
       loadUser();
     }
   }, []);
+
+  useEffect(() => {
+    setIsLoadingPermission(true);
+    const loadPermissions = async (role: string) => {
+      try {
+        const permissions = await getRolePermissions(role);
+        setPermissions(permissions?.permissions);
+        setIsLoadingPermission(false);
+      } catch (error) {
+        console.error(error);
+        setIsLoadingPermission(false);
+      }
+    };
+
+    if (user) {
+      loadPermissions(user.role);
+    } else {
+      setIsLoadingPermission(false);
+    }
+  }, [user]);
+
   return (
     <div className="flex sm:h-screen flex-col h-dvh no-select">
-      {isLoading ? (
+      {isLoading || isLoadingPermission ? (
         <div className="flex items-center justify-center h-full w-full">
-          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
+          <Loader2
+            size={48}
+            className="
+          text-primary animate-spin
+          "
+          />
         </div>
       ) : (
         <>

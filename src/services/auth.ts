@@ -37,7 +37,7 @@ export const loginUser = async (email: string, password: string) => {
     const token = jwt.sign(
       { userId: user._id.toString(), email: user.email },
       SECRET_KEY,
-      { expiresIn: "1d" }
+      { expiresIn: "30d" }
     );
 
     (await cookies()).set("auth_token", token, {
@@ -60,13 +60,11 @@ export const getUserFromCookie = async () => {
   try {
     const token = (await cookies()).get("auth_token")?.value;
     if (!token) return null;
-
     const SECRET_KEY = process.env.SECRET_KEY!;
     const decoded = jwt.verify(token, SECRET_KEY) as {
       userId: string;
       email: string;
     };
-
     const db = await connectToDatabase();
     const user = await db
       .collection("users")
@@ -74,8 +72,8 @@ export const getUserFromCookie = async () => {
         { _id: new ObjectId(decoded.userId) },
         { projection: { password: 0, _id: 0 } }
       );
-
-    if (!user || user.email !== decoded.email) {
+    console.log(user);
+    if (!user) {
       return null;
     }
 

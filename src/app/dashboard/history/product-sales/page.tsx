@@ -30,6 +30,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useBillStore } from "@/store/useBillStore";
 import { Button } from "@/components/ui/button";
 import { IoReload } from "react-icons/io5";
+import PermissionGuard from "@/components/PermissionGuard/PermissionGuard";
 
 const COLORS = [
   "hsl(var(--chart-1))",
@@ -69,9 +70,6 @@ const ProductSales = () => {
 
         return billDate === formattedDate;
       });
-
-      console.log("Formatted Date:", formattedDate);
-      console.log("Filtered Bills:", filteredBills);
 
       const products = filteredBills.flatMap((bill) => bill.cart);
 
@@ -183,126 +181,135 @@ const ProductSales = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold flex items-center justify-between">
-            Product Sales Overview
-            <div className="flex items-center text-sm font-thin">
-              <input
-                type="date"
-                className="border border-gray-300 rounded-md p-2"
-                onChange={(e) => setDate(e.target.value)}
-              />
-              <Button
-                className="ml-4"
-                variant="outline"
-                onClick={() => history.back()}
-              >
-                Back
-              </Button>
-              <IoReload className="ml-4" onClick={() => setDate(null)} />
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name} (${(percent * 100).toFixed(0)}%)`
-                    }
-                    outerRadius={150}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="space-y-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead className="text-center">Product</TableHead>
-                    <TableHead className="text-center">Quantity</TableHead>
-                    <TableHead className="text-center">% of Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentProducts.map((product, index) => (
-                    <TableRow key={product.id}>
-                      <TableCell>{startIndex + index + 1}</TableCell>
-                      <TableCell className="font-medium text-center">
-                        {product.name}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {product.quantity}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {((product.quantity / totalQuantity) * 100).toFixed(1)}%
-                      </TableCell>
+    <PermissionGuard
+      module="billing"
+      action="view_item_sales_list"
+      screen={true}
+    >
+      <div className="space-y-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-bold flex items-center justify-between flex-wrap gap-3">
+              Product Sales Overview
+              <div className="flex items-center text-sm font-thin">
+                <input
+                  type="date"
+                  className="border border-gray-300 rounded-md p-2"
+                  onChange={(e) => setDate(e.target.value)}
+                />
+                <Button
+                  className="ml-4"
+                  variant="outline"
+                  onClick={() => history.back()}
+                >
+                  Back
+                </Button>
+                <IoReload className="ml-4" onClick={() => setDate(null)} />
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="h-[300px] sm:h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) =>
+                        `${name} (${(percent * 100).toFixed(0)}%)`
+                      }
+                      outerRadius={120}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>#</TableHead>
+                      <TableHead className="text-center">Product</TableHead>
+                      <TableHead className="text-center">Quantity</TableHead>
+                      <TableHead className="text-center">% of Total</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {currentProducts.map((product, index) => (
+                      <TableRow key={product.id}>
+                        <TableCell>{startIndex + index + 1}</TableCell>
+                        <TableCell className="font-medium text-center">
+                          {product.name}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {product.quantity}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {((product.quantity / totalQuantity) * 100).toFixed(
+                            1
+                          )}
+                          %
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
 
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-4">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() =>
-                            handlePageChange(Math.max(1, currentPage - 1))
-                          }
-                          className={
-                            currentPage === 1
-                              ? "pointer-events-none opacity-50"
-                              : "cursor-pointer"
-                          }
-                        />
-                      </PaginationItem>
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-4">
+                    <Pagination className="sm:text-sm text-xs">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() =>
+                              handlePageChange(Math.max(1, currentPage - 1))
+                            }
+                            className={
+                              currentPage === 1
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
 
-                      {getPaginationItems()}
+                        {getPaginationItems()}
 
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() =>
-                            handlePageChange(
-                              Math.min(totalPages, currentPage + 1)
-                            )
-                          }
-                          className={
-                            currentPage === totalPages
-                              ? "pointer-events-none opacity-50"
-                              : "cursor-pointer"
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              )}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() =>
+                              handlePageChange(
+                                Math.min(totalPages, currentPage + 1)
+                              )
+                            }
+                            className={
+                              currentPage === totalPages
+                                ? "pointer-events-none opacity-50"
+                                : "cursor-pointer"
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </div>
+    </PermissionGuard>
   );
 };
 

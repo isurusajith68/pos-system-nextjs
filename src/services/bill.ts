@@ -41,7 +41,6 @@ export const addBill = async (bill: {
       { $inc: { number: 1 } }
     );
 
-    console.log(bill.cart.map((item) => item.ingredients));
 
     for (const item of bill.cart) {
       if (!item.ingredients) {
@@ -64,7 +63,6 @@ export const addBill = async (bill: {
         continue;
       }
       for (const ingredient of item?.ingredients) {
-        console.log(ingredient, "ingredient");
         const stockCollection = db.collection("stocks");
 
         const stock = await stockCollection.findOne({
@@ -80,7 +78,6 @@ export const addBill = async (bill: {
         const requiredQuantity =
           Number(item.quantity) * Number(ingredient.quantityPerProduct);
 
-        console.log("requiredQuantity", requiredQuantity);
 
         const productsSalesCollection = db.collection("productsSales");
 
@@ -262,7 +259,6 @@ export const getDailySales = async () => {
         },
       ])
       .toArray();
-    console.log(dailySales);
     return dailySales.map((bill) => ({
       ...bill,
       _id: bill._id.toString(),
@@ -274,7 +270,6 @@ export const getDailySales = async () => {
 };
 
 export const refundBillAction = async (billId: string) => {
-  console.log("Refunding bill:", billId);
   try {
     const db = await connectToDatabase();
     const billsCollection = db.collection("bills");
@@ -283,7 +278,6 @@ export const refundBillAction = async (billId: string) => {
       _id: new ObjectId(billId),
     });
 
-    console.log("Bill data:", billData);
 
     if (!billData) {
       return { success: false, error: "Bill not found" };
@@ -376,7 +370,6 @@ export const salesDataWeekly = async () => {
     const endOfWeek = new Date(
       today.setDate(today.getDate() - today.getDay() + 6)
     );
-    console.log(startOfWeek, endOfWeek);
     const weeklySales = await billsCollection
       .aggregate([
         {
@@ -479,12 +472,10 @@ export const getProductsSales = async () => {
 
 export const lowStockProducts = async () => {
   try {
-    console.log("Fetching low stock products");
     const db = await connectToDatabase();
     const stockCollection = db.collection("stocks");
 
     const stock = await stockCollection.find().toArray();
-    console.log(stock);
     const lowStockProduct = [];
 
     for (const item of stock) {
@@ -492,7 +483,6 @@ export const lowStockProducts = async () => {
         lowStockProduct.push(item);
       }
     }
-    console.log(lowStockProduct);
 
     const lowStockProductData = lowStockProduct.map((item) => ({
       ...item,

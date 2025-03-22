@@ -45,7 +45,6 @@ export default function Navbar({ user }) {
       try {
         const res = await fetch("http://localhost:5000/printer-online");
         const data = await res.json();
-        console.log("Printer Status:", data);
 
         if (data.success) {
           setPrinterOnline(true);

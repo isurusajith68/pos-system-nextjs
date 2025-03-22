@@ -84,6 +84,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuthStore } from "@/store/useAuthStore";
 import Link from "next/link";
+import { usePermissionStore } from "@/store/usePremissionStore";
+import PermissionGuard from "@/components/PermissionGuard/PermissionGuard";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -100,6 +102,7 @@ const BillHistoryPage = () => {
   const { toast } = useToast();
   const [darkMode, setDarkMode] = useState(false);
   const { user } = useAuthStore();
+  const { permissions } = usePermissionStore();
 
   useEffect(() => {
     if (localStorage.getItem("theme") === "dark") {
@@ -108,20 +111,18 @@ const BillHistoryPage = () => {
     }
   }, []);
   useEffect(() => {
-    console.log(user);
-    if (user?.role === "admin") {
+    if (permissions?.billing?.actions?.view_all_bills) {
       fetchBills();
     }
-    if (user?.role === "cashier") {
+    console.log(permissions?.billing?.actions?.view_daily_bills);
+    if (permissions?.billing?.actions?.view_daily_bills) {
       fetchDailyBills();
-      console.log("fetching daily bills");
     }
-  }, [user]);
+  }, [permissions]);
 
   const fetchDailyBills = async () => {
     try {
       const result = await getDailyBills();
-      console.log(result);
       if (result.success) {
         setDailySales(result.bills);
       } else {
@@ -148,7 +149,11 @@ const BillHistoryPage = () => {
   ]);
 
   const callFilteredBills = useCallback(() => {
-    let filtered = user?.role === "admin" ? billHistory : dailySales;
+    let filtered = permissions?.billing?.actions?.view_all_bills
+      ? billHistory
+      : permissions?.billing?.actions?.view_daily_bills
+      ? dailySales
+      : dailySales;
 
     filtered = filtered.filter((bill) => {
       const billDate = new Date(bill.date);
@@ -276,10 +281,10 @@ const BillHistoryPage = () => {
       const result = await refundBillAction(billId);
 
       if (result.success) {
-        if (user?.role === "admin") {
+        if (permissions?.billing?.actions?.view_all_bills) {
           fetchBills();
         }
-        if (user?.role === "cashier") {
+        if (permissions?.billing?.actions?.view_daily_bills) {
           fetchDailyBills();
         }
         toast({
@@ -303,7 +308,6 @@ const BillHistoryPage = () => {
       });
     }
   };
-  console.log(filteredBills);
   const getBillStats = (bills: (typeof billHistory)[0][]) => {
     const notRefundedBills = filteredBills.filter((bill) => !bill.refunded);
 
@@ -422,14 +426,16 @@ const BillHistoryPage = () => {
           >
             Print Bill
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => refundBill(bill.id)}
-            className="bg-destructive text-destructive-foreground"
-            disabled={bill.refunded}
-          >
-            Refund Bill
-          </Button>
+          <PermissionGuard module="billing" action="refund_bill">
+            <Button
+              variant="outline"
+              onClick={() => refundBill(bill.id)}
+              className="bg-destructive text-destructive-foreground"
+              disabled={bill.refunded}
+            >
+              Refund Bill
+            </Button>
+          </PermissionGuard>
         </div>
       </CardFooter>
     </Card>
@@ -439,27 +445,29 @@ const BillHistoryPage = () => {
     <div className="container mx-auto sm:p-4  max-w-full">
       <h1 className="text-xl font-bold mb-6 flex items-center justify-between">
         Bill History{" "}
-        <Button variant="outline" size="lg">
-          <Link href={`/dashboard/history/product-sales`}>
-            Product Item sales
-          </Link>
-        </Button>
+        <PermissionGuard module="billing" action="view_item_sales_list">
+          <Button variant="outline" size="lg">
+            <Link href={`/dashboard/history/product-sales`}>
+              Product Item sales
+            </Link>
+          </Button>
+        </PermissionGuard>
       </h1>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="relative w-full sm:w-64">
-          <Input
-            type="text"
-            placeholder="Search bills..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-        </div>
+      <PermissionGuard module="billing" action="view_all_bills">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="relative w-full sm:w-64">
+            <Input
+              type="text"
+              placeholder="Search bills..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+            <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+          </div>
 
-        <div className="flex space-x-4 ">
-          {user?.role === "admin" && (
+          <div className="flex space-x-4 ">
             <div className="flex sm:flex-row flex-col justify-between items-center gap-2">
               <div className="flex items-center space-x-2">
                 <Button
@@ -491,335 +499,357 @@ const BillHistoryPage = () => {
                 />
               </div>
             </div>
-          )}
-          <div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="bg-primary p-1 rounded-full text-secondary">
-                    <RiResetRightLine
-                      onClick={handleReset}
-                      className={`h-6 w-6 cursor-pointer ${
-                        spinning ? "animate-spin" : ""
-                      }`}
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="right" align="center" sideOffset={16}>
-                  <p>Reset</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="bg-primary p-1 rounded-full text-secondary">
+                      <RiResetRightLine
+                        onClick={handleReset}
+                        className={`h-6 w-6 cursor-pointer ${
+                          spinning ? "animate-spin" : ""
+                        }`}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" align="center" sideOffset={16}>
+                    <p>Reset</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
         </div>
-      </div>
+      </PermissionGuard>
+      <PermissionGuard module="billing" action="view_bills">
+        <div className="block md:hidden space-y-4">
+          <PermissionGuard module="billing" action="total_amounts">
+            <span className="text-base font-semibold">
+              {" "}
+              Total Sales: Rs {getBillStats(billHistory).totalSales.toFixed(2)}
+            </span>
+          </PermissionGuard>
 
-      <div className="block md:hidden space-y-4">
-        {paginatedBills.map((bill) => (
-          <Card key={bill.id} className="w-full">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg">{bill.billNumber}</CardTitle>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="hover:bg-secondary"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl">
-                        Bill Details - {bill.billNumber}
-                      </DialogTitle>
-                      <DialogDescription>
-                        Detailed information about the selected bill.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="mt-4">
-                      <BillDetails bill={bill} />
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-y-2 text-sm">
-                <div className="text-muted-foreground">Date & Time:</div>
-                <div>
-                  {bill.date} {bill.time}
+          {paginatedBills.map((bill) => (
+            <Card key={bill.id} className="w-full">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg">{bill.billNumber}</CardTitle>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hover:bg-secondary"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle className="text-xl">
+                          Bill Details - {bill.billNumber}
+                        </DialogTitle>
+                        <DialogDescription>
+                          Detailed information about the selected bill.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="mt-4">
+                        <BillDetails bill={bill} />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
-                <div className="text-muted-foreground">Total:</div>
-                <div className="font-medium">Rs {bill.total.toFixed(2)}</div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-y-2 text-sm">
+                  <div className="text-muted-foreground">Date & Time:</div>
+                  <div>
+                    {bill.date} {bill.time}
+                  </div>
+                  <div className="text-muted-foreground">Total:</div>
+                  <div className="font-medium">Rs {bill.total.toFixed(2)}</div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          <div className="flex justify-center items-center space-x-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="hidden md:block">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                <div className="flex justify-between items-center space-x-2">
+                  <h3 className="text-xl font-semibold">Bill History</h3>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 sm:p-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Bill Number</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Discount</TableHead>
+                    <TableHead>Discount Amount</TableHead>
+
+                    <TableHead className="w-[80px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedBills.map((bill) => (
+                    <TableRow
+                      key={bill.id}
+                      className={
+                        bill.refunded
+                          ? "bg-red-500 hover:bg-red-500 text-white"
+                          : ""
+                      }
+                    >
+                      <TableCell className="font-medium">
+                        {bill.billNumber}
+                      </TableCell>
+                      <TableCell>{bill.date}</TableCell>
+                      <TableCell>{bill.time}</TableCell>
+                      <TableCell>Rs {bill.total.toFixed(2)}</TableCell>
+                      <TableCell>{bill.discount} %</TableCell>
+                      <TableCell>
+                        {bill.discountAmount
+                          ? `Rs ${Number(bill.discountAmount).toFixed(2)}`
+                          : "Rs 0.00"}
+                      </TableCell>
+
+                      <TableCell className="flex justify-center items-center">
+                        <PermissionGuard
+                          module="billing"
+                          action="view_bill_detail"
+                        >
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <div className="flex gap-2">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="hover:bg-secondary"
+                                        >
+                                          <Eye className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                      side="right"
+                                      align="center"
+                                      sideOffset={16}
+                                    >
+                                      <p>
+                                        <span className="font-medium">
+                                          View Bill
+                                        </span>
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                              <DialogHeader>
+                                <DialogTitle className="text-xl">
+                                  Bill Details - {bill.billNumber}
+                                </DialogTitle>
+                                <DialogDescription>
+                                  Detailed information about the selected bill.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="mt-4">
+                                <BillDetails bill={bill} />
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </PermissionGuard>
+                        <PermissionGuard module="billing" action="delete_bill">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <div className="flex gap-2">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="hover:bg-destructive"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                      side="right"
+                                      align="center"
+                                      sideOffset={16}
+                                    >
+                                      <p>
+                                        <span className="font-medium">
+                                          Delete Bill
+                                        </span>
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Delete Bill - {bill.billNumber}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this bill?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-white"
+                                  onClick={async () => {
+                                    await removeBill(bill.id);
+                                    if (
+                                      permissions?.billing?.actions
+                                        ?.view_all_bills
+                                    ) {
+                                      fetchBills();
+                                    }
+                                    if (
+                                      permissions?.billing?.actions
+                                        ?.view_daily_bills
+                                    ) {
+                                      fetchDailyBills();
+                                    }
+                                  }}
+                                >
+                                  Delete Bill
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </PermissionGuard>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                <TableFooter className="">
+                  <PermissionGuard module="billing" action="total_amounts">
+                    <TableRow className="">
+                      <TableCell colSpan={9} className="p-0 ">
+                        <div className="flex justify-between items-center bg-blue-600 text-white p-4 border-2 dark:border-white border-black rounded-lg">
+                          <span className="text-base font-semibold">
+                            Showing {paginatedBills.length} of{" "}
+                            {filteredBills.length} bills
+                            <span className="ml-2 border-r-2 pr-2 border-l-2 pl-2 border-white">
+                              {
+                                filteredBills.filter((bill) => bill.refunded)
+                                  .length
+                              }
+                              {" Refunded"}
+                            </span>
+                            <span
+                              className={cn(
+                                "ml-2 px-2 py-1 rounded-full text-xs",
+                                selectedDate
+                                  ? "bg-white text-black"
+                                  : "bg-blue-800"
+                              )}
+                            >
+                              {selectedDate
+                                ? selectedDate
+                                : `All Dates - ${format(
+                                    currentMonth,
+                                    "MMMM yyyy"
+                                  )}`}
+                            </span>
+                          </span>
+
+                          <div className="flex items-center space-x-2">
+                            <span className="text-base font-semibold border-r-2 pr-2 border-white">
+                              Total Refunded: Rs{" "}
+                              {getRefundedBillsStats(
+                                billHistory
+                              ).totalRefunded.toFixed(2)}
+                            </span>
+                            <span className="text-base font-semibold">
+                              {" "}
+                              Total Sales: Rs{" "}
+                              {getBillStats(billHistory).totalSales.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  </PermissionGuard>
+                </TableFooter>
+              </Table>
+
+              <div className="flex justify-center items-center space-x-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
               </div>
             </CardContent>
           </Card>
-        ))}
-
-        <div className="flex justify-center items-center space-x-2 mt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-            }
-            disabled={currentPage === totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
         </div>
-      </div>
-
-      <div className="hidden md:block">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <div className="flex justify-between items-center space-x-2">
-                <h3 className="text-xl font-semibold">Bill History</h3>
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 sm:p-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Bill Number</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Discount</TableHead>
-                  <TableHead>Discount Amount</TableHead>
-
-                  <TableHead className="w-[80px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedBills.map((bill) => (
-                  <TableRow
-                    key={bill.id}
-                    className={
-                      bill.refunded
-                        ? "bg-red-500 hover:bg-red-500 text-white"
-                        : ""
-                    }
-                  >
-                    <TableCell className="font-medium">
-                      {bill.billNumber}
-                    </TableCell>
-                    <TableCell>{bill.date}</TableCell>
-                    <TableCell>{bill.time}</TableCell>
-                    <TableCell>Rs {bill.total.toFixed(2)}</TableCell>
-                    <TableCell>{bill.discount} %</TableCell>
-                    <TableCell>
-                      {bill.discountAmount
-                        ? `Rs ${Number(bill.discountAmount).toFixed(2)}`
-                        : "Rs 0.00"}
-                    </TableCell>
-
-                    <TableCell className="flex justify-center items-center">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <div className="flex gap-2">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="hover:bg-secondary"
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="right"
-                                  align="center"
-                                  sideOffset={16}
-                                >
-                                  <p>
-                                    <span className="font-medium">
-                                      View Bill
-                                    </span>
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                          <DialogHeader>
-                            <DialogTitle className="text-xl">
-                              Bill Details - {bill.billNumber}
-                            </DialogTitle>
-                            <DialogDescription>
-                              Detailed information about the selected bill.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="mt-4">
-                            <BillDetails bill={bill} />
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <div className="flex gap-2">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="">
-                                    {user?.role === "admin" ? (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="hover:bg-destructive"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    ) : (
-                                      <></>
-                                    )}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="right"
-                                  align="center"
-                                  sideOffset={16}
-                                >
-                                  <p>
-                                    <span className="font-medium">
-                                      Delete Bill
-                                    </span>
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Delete Bill - {bill.billNumber}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this bill?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive text-white"
-                              onClick={async () => {
-                                await removeBill(bill.id);
-                                if (user?.role === "admin") {
-                                  fetchBills();
-                                }
-                                if (user?.role === "cashier") {
-                                  fetchDailyBills();
-                                }
-                              }}
-                            >
-                              Delete Bill
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <TableFooter className="">
-                <TableRow className="">
-                  <TableCell colSpan={9} className="p-0 ">
-                    <div className="flex justify-between items-center bg-blue-600 text-white p-4 border-2 dark:border-white border-black rounded-lg">
-                      <span className="text-base font-semibold">
-                        Showing {paginatedBills.length} of{" "}
-                        {filteredBills.length} bills
-                        <span className="ml-2 border-r-2 pr-2 border-l-2 pl-2 border-white">
-                          {filteredBills.filter((bill) => bill.refunded).length}
-                          {" Refunded"}
-                        </span>
-                        {user?.role === "admin" && (
-                          <span
-                            className={cn(
-                              "ml-2 px-2 py-1 rounded-full text-xs",
-                              selectedDate
-                                ? "bg-white text-black"
-                                : "bg-blue-800"
-                            )}
-                          >
-                            {selectedDate
-                              ? selectedDate
-                              : `All Dates - ${format(
-                                  currentMonth,
-                                  "MMMM yyyy"
-                                )}`}
-                          </span>
-                        )}
-                      </span>
-
-                      <div className="flex items-center space-x-2">
-                        <span className="text-base font-semibold border-r-2 pr-2 border-white">
-                          Total Refunded: Rs{" "}
-                          {getRefundedBillsStats(
-                            billHistory
-                          ).totalRefunded.toFixed(2)}
-                        </span>
-                        <span className="text-base font-semibold">
-                          {" "}
-                          Total Sales: Rs{" "}
-                          {getBillStats(billHistory).totalSales.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-
-            <div className="flex justify-center items-center space-x-2 mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Previous
-              </Button>
-              <span className="text-sm">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                disabled={currentPage === totalPages}
-              >
-                Next
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      </PermissionGuard>
     </div>
   );
 };

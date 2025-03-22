@@ -34,7 +34,6 @@ export type StockFormData = z.infer<typeof stockSchema>;
 
 export const createStock = async (data: StockFormData) => {
   const db = await connectToDatabase();
-  console.log(data);
   const stock = await db
     .collection("stocks")
     .findOne({ ingredientName: data.ingredientName });
@@ -125,7 +124,6 @@ export const getAllIngredientsNames = async () => {
   const db = await connectToDatabase();
   const stocks = await db.collection("stocks").find().toArray();
 
-  console.log(stocks, "stocks");
 
   return stocks.map((stock) => ({
     ingredientName: stock.ingredientName,
@@ -136,7 +134,6 @@ export const getAllIngredientsNames = async () => {
 };
 
 export const saveStockTransaction = async (data : any) => {
-  console.log(data.selectedIngredientId);
   const db = await connectToDatabase();
   const timestamp = new Date();
   await db.collection("stockTransactions").insertOne({
@@ -149,7 +146,6 @@ export const saveStockTransaction = async (data : any) => {
   if (!stock) {
     return { success: false, message: "Stock not found" };
   }
-  console.log(data);
   if (data.activityType === "Added") {
     await db.collection("stocks").updateOne(
       { _id: new ObjectId(data.selectedIngredientId) },

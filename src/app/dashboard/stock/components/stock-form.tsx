@@ -50,7 +50,6 @@ export const stockFormSchema = z.object({
   minimumStockLevel: z.coerce
     .number()
     .min(0, "Minimum stock level must be 0 or greater"),
-
   supplier: z.object({
     name: z.string().min(1, "Supplier name is required"),
     contactInfo: z.string().min(1, "Supplier contact info is required"),
@@ -77,7 +76,6 @@ export default function StockForm({ setReFetch }: { setReFetch: any }) {
       };
 
       const result = await createStock(formData);
-      console.log(result);
       if (result.success) {
         toast.success("Stock added successfully");
         setOpen(false);
@@ -96,18 +94,20 @@ export default function StockForm({ setReFetch }: { setReFetch: any }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="w-full sm:w-auto">
           <PlusCircle className="mr-2 h-4 w-4" />
           Add New Stock
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>Add New Stock</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl">
+            Add New Stock
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="ingredientName"
@@ -115,7 +115,7 @@ export default function StockForm({ setReFetch }: { setReFetch: any }) {
                   <FormItem>
                     <FormLabel>Ingredient Name</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -133,7 +133,7 @@ export default function StockForm({ setReFetch }: { setReFetch: any }) {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                       </FormControl>
@@ -163,7 +163,7 @@ export default function StockForm({ setReFetch }: { setReFetch: any }) {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select unit" />
                         </SelectTrigger>
                       </FormControl>
@@ -187,7 +187,7 @@ export default function StockForm({ setReFetch }: { setReFetch: any }) {
                   <FormItem>
                     <FormLabel>Initial Quantity</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -201,7 +201,7 @@ export default function StockForm({ setReFetch }: { setReFetch: any }) {
                   <FormItem>
                     <FormLabel>Minimum Stock Level</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -215,7 +215,7 @@ export default function StockForm({ setReFetch }: { setReFetch: any }) {
                   <FormItem>
                     <FormLabel>Supplier Name</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -229,7 +229,7 @@ export default function StockForm({ setReFetch }: { setReFetch: any }) {
                   <FormItem>
                     <FormLabel>Supplier Contact Info</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -237,15 +237,18 @@ export default function StockForm({ setReFetch }: { setReFetch: any }) {
               />
             </div>
 
-            <div className="flex justify-end gap-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mt-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
-              <Button type="submit">Add Stock</Button>
+              <Button type="submit" className="w-full sm:w-auto">
+                Add Stock
+              </Button>
             </div>
           </form>
         </Form>
