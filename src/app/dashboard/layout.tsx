@@ -74,12 +74,8 @@ const Layout = ({ children }: LayoutProps) => {
       }
     };
 
-    if (!user) {
-      loadUser();
-    } else {
-      setIsLoading(false);
-    }
-  }, [user, setUser, router]);
+    loadUser();
+  }, []);
 
   useEffect(() => {
     const loadPermissions = async () => {
