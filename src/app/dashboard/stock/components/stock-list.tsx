@@ -65,9 +65,7 @@ export default function StockList({
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
               <PermissionGuard module="stock_management" action="edit_stock">
-                <Button variant="ghost" size="sm">
-                  <EditStockForm stockData={stock} />
-                </Button>
+                <EditStockForm stockData={stock} />
               </PermissionGuard>
               <PermissionGuard module="stock_management" action="delete_stock">
                 <Button
@@ -88,7 +86,6 @@ export default function StockList({
         ))}
       </div>
 
-      {/* Desktop View (Table Layout) */}
       <div className="hidden md:block">
         <ScrollArea className="rounded-md border">
           <Table>
