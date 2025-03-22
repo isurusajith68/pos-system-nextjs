@@ -70,8 +70,8 @@ export const savePermissions = async () => {
     },
   };
 
-  const result = await db.collection("permissions").insertOne(permissionsData);
-  return result.insertedId;
+  await db.collection("permissions").insertOne(permissionsData);
+  return { success: true, message: "Permissions saved successfully" };
 };
 
 export const getPermissions = async () => {
