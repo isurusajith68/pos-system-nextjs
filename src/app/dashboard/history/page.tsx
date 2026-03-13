@@ -114,7 +114,7 @@ const BillHistoryPage = () => {
     if (permissions?.billing?.actions?.view_all_bills) {
       fetchBills();
     }
-   
+
     if (permissions?.billing?.actions?.view_daily_bills) {
       fetchDailyBills();
     }
@@ -152,8 +152,8 @@ const BillHistoryPage = () => {
     let filtered = permissions?.billing?.actions?.view_all_bills
       ? billHistory
       : permissions?.billing?.actions?.view_daily_bills
-      ? dailySales
-      : dailySales;
+        ? dailySales
+        : dailySales;
 
     filtered = filtered.filter((bill) => {
       const billDate = new Date(bill.date);
@@ -201,7 +201,7 @@ const BillHistoryPage = () => {
   const totalPages = Math.ceil(filteredBills.length / ITEMS_PER_PAGE);
   const paginatedBills = filteredBills.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   const handlePreviousMonth = () => {
@@ -253,7 +253,7 @@ const BillHistoryPage = () => {
     };
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/print", {
+      const response = await fetch("http://127.0.0.1:9000/print", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bill),
@@ -313,7 +313,7 @@ const BillHistoryPage = () => {
 
     const totalSales = notRefundedBills.reduce(
       (acc, bill) => acc + bill.total,
-      0
+      0,
     );
     return { totalSales };
   };
@@ -322,7 +322,7 @@ const BillHistoryPage = () => {
     const refundedBills = filteredBills.filter((bill) => bill.refunded);
     const totalRefunded = refundedBills.reduce(
       (acc, bill) => acc + bill.total,
-      0
+      0,
     );
 
     return { totalRefunded };
@@ -787,14 +787,14 @@ const BillHistoryPage = () => {
                                 "ml-2 px-2 py-1 rounded-full text-xs",
                                 selectedDate
                                   ? "bg-white text-black"
-                                  : "bg-blue-800"
+                                  : "bg-blue-800",
                               )}
                             >
                               {selectedDate
                                 ? selectedDate
                                 : `All Dates - ${format(
                                     currentMonth,
-                                    "MMMM yyyy"
+                                    "MMMM yyyy",
                                   )}`}
                             </span>
                           </span>
@@ -803,7 +803,7 @@ const BillHistoryPage = () => {
                             <span className="text-base font-semibold border-r-2 pr-2 border-white">
                               Total Refunded: Rs{" "}
                               {getRefundedBillsStats(
-                                billHistory
+                                billHistory,
                               ).totalRefunded.toFixed(2)}
                             </span>
                             <span className="text-base font-semibold">
