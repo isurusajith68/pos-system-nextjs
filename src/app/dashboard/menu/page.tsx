@@ -175,7 +175,7 @@ const MenuPage = () => {
         return prevCart.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item
+            : item,
         );
       }
       return [...prevCart, { ...product, quantity: 1 }];
@@ -189,7 +189,7 @@ const MenuPage = () => {
         return prevCart.map((item) =>
           item.id === productId
             ? { ...item, quantity: item.quantity - 1 }
-            : item
+            : item,
         );
       }
       return prevCart.filter((item) => item.id !== productId);
@@ -209,7 +209,7 @@ const MenuPage = () => {
 
   const totalBill = cart.reduce(
     (total, item) => total + item.price * item.quantity,
-    0
+    0,
   );
 
   const discountAmount = (totalBill * discount) / 100;
@@ -454,7 +454,7 @@ const MenuPage = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/print", {
+      const response = await fetch("http://127.0.0.1:5000/print", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bill),
@@ -683,7 +683,7 @@ const MenuPage = () => {
                                   <p className="font-bold text-lg ">
                                     Rs{" "}
                                     {parseFloat(
-                                      product.price.toString()
+                                      product.price.toString(),
                                     ).toFixed(2)}
                                   </p>
                                 </div>
@@ -720,7 +720,7 @@ const MenuPage = () => {
                               </Button>
                             </CardContent>
                           </Card>
-                        )
+                        ),
                       )}
                     </div>
                   )}
@@ -889,7 +889,7 @@ const MenuPage = () => {
                           date: date,
                           time: time,
                           totalBill: parseFloat(
-                            (totalBill - discountAmount).toFixed(2)
+                            (totalBill - discountAmount).toFixed(2),
                           ),
                           subTotal: totalBill,
                           cashAmount: cashAmount,

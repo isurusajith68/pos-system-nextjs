@@ -43,7 +43,7 @@ export default function Navbar({ user }) {
     const fetchPrinterOnline = async () => {
       setSpin(true);
       try {
-        const res = await fetch("http://localhost:5000/printer-online");
+        const res = await fetch("http://127.0.0.1:5000/printer-online");
         const data = await res.json();
 
         if (data.success) {
